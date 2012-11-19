@@ -144,8 +144,8 @@ public class RobotiumClientImpl implements MobileClintInterface {
 		return result;
 	}
 
-	public String launch() throws Exception {
-		return sendData("launch");
+	public String launch(String launcherActivityClass) throws Exception {
+		return sendData("launch",launcherActivityClass);
 	}
 	
 	public String getTextView(int index) throws Exception {

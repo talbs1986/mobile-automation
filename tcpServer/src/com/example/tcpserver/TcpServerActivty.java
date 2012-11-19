@@ -26,13 +26,14 @@ public class TcpServerActivty extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     	Log.i(TAG, "in on create");
-    	if(savedInstanceState == null){
-    		savedInstanceState = new Bundle();
-    	}
-    	savedInstanceState.putString("launcherActivityClass", "com.gettaxi.android.activities.login.LoadingActivity");
-		startInstrumentation(new ComponentName("org.topq.jsystem.mobile", "org.topq.jsystem.mobile.RobotiumServerInstrumentation"), null, savedInstanceState);
 		startServer();
     }
+
+	public void startInstrrumentationServer(String launcherActivityClass) {
+		Bundle savedInstanceState  = new Bundle();
+    	savedInstanceState.putString("launcherActivityClass", launcherActivityClass);
+		startInstrumentation(new ComponentName("org.topq.jsystem.mobile", "org.topq.jsystem.mobile.RobotiumServerInstrumentation"), null, savedInstanceState);
+	}
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -41,7 +42,7 @@ public class TcpServerActivty extends Activity {
     }
     public void startServer()  {	
 		Log.d(TAG, "Start server");	
-		TcpServer server = new TcpServer();
+		TcpServer server = new TcpServer(this);
 		Log.i(TAG, "About to launch server");
 		serverThread = new Thread(server);
 		serverThread.start();

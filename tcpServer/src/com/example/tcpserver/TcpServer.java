@@ -10,9 +10,13 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+
 import android.app.Activity;
+import android.content.ComponentName;
+import android.os.Bundle;
 import android.util.Log;
 
 /**
@@ -33,11 +37,14 @@ public class TcpServer implements Runnable {
 	private String sendResponse;
 
 	private boolean done = false;
+	 
+	private TcpServerActivty activ = null;
+
 	
 //	private final Activity act;
 
-	public TcpServer() {
-		listeners = new ArrayList<IDataCallback>();
+	public TcpServer(TcpServerActivty activ) {
+		activ = this.activ;
 	}
 
 	public void addTestListener(IDataCallback toAdd) {
@@ -55,6 +62,8 @@ public class TcpServer implements Runnable {
 	public void gotTestResponse(String toAdd) {
 		sendResponse = toAdd;
 	}
+	
+	
 
 	@Override
 	public void run() {
@@ -76,16 +85,22 @@ public class TcpServer implements Runnable {
 					String line = clientIn.readLine();
 					PrintWriter serverOutput = null;
 					BufferedReader serverInput = null;
-					Socket socket = new Socket("localhost", 4321);
-					socket.setTcpNoDelay(true);
+					
+		
 					if (line != null) {
-						
 						Log.d(TAG, "Received: '" + line + "'");
-						serverOutput = new PrintWriter(socket.getOutputStream());
-						serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-						serverOutput.append(line+"\n");
-						serverOutput.flush();
-						
+						ScriptParser parser = new ScriptParser(line);
+						for (CommandParser command : parser.getCommands()) {
+							if(command.getCommand().equals("launch")){
+								activ.startInstrrumentationServer(command.getArguments().getString(0));
+							}
+							Socket socket = new Socket("localhost", 4321);
+							socket.setTcpNoDelay(true);
+							serverOutput = new PrintWriter(socket.getOutputStream());
+							serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+							serverOutput.append(line+"\n");
+							serverOutput.flush();
+						}
 					}
 				
 					clientOut.println(serverInput.readLine());
