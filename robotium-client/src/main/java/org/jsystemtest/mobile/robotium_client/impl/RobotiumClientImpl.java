@@ -9,8 +9,8 @@ import net.iharder.Base64;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
-import org.jsystemtest.mobile.common_mobile.client.enums.Attribute;
 import org.jsystemtest.mobile.common_mobile.client.enums.HardwareButtons;
+import org.jsystemtest.mobile.common_mobile.client.enums.Attribute;
 import org.jsystemtest.mobile.common_mobile.client.interfaces.MobileClientInterface;
 import org.jsystemtest.mobile.core.AdbController;
 import org.jsystemtest.mobile.core.ConnectionException;
@@ -28,30 +28,41 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	private static final String SERVER_PACKAGE_NAME = "org.topq.jsystem.mobile";
 	private static final String SERVER_CLASS_NAME = "RobotiumServer";
 	private static final String SERVER_TEST_NAME = "testMain";
-	private static final String RESULT_STRING = "RESULT";
-	private static final String CONFIG_FILE = "/data/conf.txt";
-
 	private TcpClient tcpClient;
 	private USBDevice device;
 	private static boolean getScreenshots = false;
+	private static String pakageName = null;
 	private static int port = 4321;
 	private static String deviceSerial;
 	private static String apkLocation = null;
 	private static String host = "localhost";
+	private static final String RESULT_STRING = "RESULT";
+	private static final String CONFIG_FILE = "/data/conf.txt";
+	private static String launcherActivityFullClassname = null;
 
 	public RobotiumClientImpl(String configFileName) throws Exception {
 		this(configFileName, true);
 	}
-
+	/**
+	 * @param configFileName
+	 * @param deployServer
+	 * @throws Exception
+	 */
 	public RobotiumClientImpl(String configFileName, boolean deployServer) throws Exception {
 		this(configFileName, deployServer, true);
 	}
-
-	public RobotiumClientImpl(Properties configProperties, boolean deployServer, boolean launchServer) throws InstallException, Exception {
-		readConfigFile(configProperties);
-		launchClient();
-		launchServer(deployServer, launchServer, configProperties);
-	}
+//	/**
+//	 * 
+//	 * @param configFileName- the location of the client config file
+//	 * @param deployServer - will install the serverApk (if you olrady install it the old version will be delete and the new one will be installed)
+//	 * @param launchServer - start the server 
+//	 * @throws Exception
+//	 */
+//	public RobotiumClientImpl(Properties configProperties, boolean deployServer, boolean launchServer) throws InstallException, Exception {
+//		readConfigFile(configProperties);
+//		launchClient(launcherActivityFullClassname);
+//		launchServer(deployServer, launchServer, configProperties);
+//	}
 
 	public RobotiumClientImpl(String configFileName, boolean deployServer, boolean launchServer) throws Exception {
 		final File configFile = new File(configFileName);
@@ -72,27 +83,22 @@ public class RobotiumClientImpl implements MobileClientInterface {
 		readConfigFile(configProperties);
 
 		device = AdbController.getInstance().waitForDeviceToConnect(deviceSerial);
-		if (deployServer) {
-			device.installPackage(apkLocation, true);
-			String serverConfFile = configProperties.getProperty("ServerConfFile");
-			logger.debug("Server Conf File:" + serverConfFile);
-			device.pushFileToDevice(CONFIG_FILE, serverConfFile);
-		}
-		if (launchServer) {
-			device.runTestOnDevice(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, SERVER_TEST_NAME);
-		}
-		logger.info("Start server on device");
-		setPortForwarding();
+//		if (deployServer) {
+//			device.installPackage(apkLocation, true);
+//			String serverConfFile = configProperties.getProperty("ServerConfFile");
+//			logger.debug("Server Conf File:" + serverConfFile);
+//			device.pushFileToDevice(CONFIG_FILE, serverConfFile);
+//		}
+//		if (launchServer) {
+//			logger.info("Start server on device");
+//			device.startServer(pakageName, launcherActivityFullClassname);
+//		}
+		setPortForwarding();		
 		tcpClient = new TcpClient(host, port);
 	}
 
-	private void launchClient() throws ConnectionException, Exception {
-		device = AdbController.getInstance().waitForDeviceToConnect(deviceSerial);
-		setPortForwarding();
-		tcpClient = new TcpClient(host, port);
-	}
 
-	private void launchServer(boolean deployServer, boolean launchServer, Properties configProperties) throws InstallException, Exception {
+		private void launchServer(boolean deployServer, boolean launchServer, Properties configProperties) throws InstallException, Exception {
 		if (deployServer) {
 			logger.info("About to deploy server on device");
 			device.installPackage(apkLocation, true);
@@ -106,46 +112,8 @@ public class RobotiumClientImpl implements MobileClientInterface {
 		}
 	}
 
-	/**
-	 * Read all the details from the given properties and populate the object members.
-	 * 
-	 * @param configProperties
-	 */
-	private void readConfigFile(final Properties configProperties) {
-		if (isPropertyExist(configProperties, "port")) {
-			port = Integer.parseInt(configProperties.getProperty("port"));
-		}
-		logger.debug("Port is set to" + port);
+	
 
-		if (!isPropertyExist(configProperties, "deviceSerial")) {
-			throw new IllegalStateException("Device serial was not specified in config file");
-		}
-		deviceSerial = configProperties.getProperty("deviceSerial");
-
-		logger.debug("Device serial is set to" + deviceSerial);
-
-		if (isPropertyExist(configProperties, "apkLocation")) {
-			apkLocation = configProperties.getProperty("apkLocation");
-		}
-		logger.debug("APK location is set to:" + apkLocation);
-
-		if (isPropertyExist(configProperties, "host")) {
-			host = configProperties.getProperty("host");
-		}
-		logger.debug("Host is set to" + host);
-	}
-
-	/**
-	 * Check if the property with the specified key exists in the specified properties object.
-	 * 
-	 * @param configProperties
-	 * @param key
-	 * @return true if and only if the property with the specified key exists.
-	 */
-	private boolean isPropertyExist(Properties configProperties, String key) {
-		final String value = configProperties.getProperty(key);
-		return value != null && !value.isEmpty();
-	}
 
 	/**
 	 * Send data using the TCP connection & wait for response Parse the response (make conversions if necessary - pixels
@@ -182,7 +150,14 @@ public class RobotiumClientImpl implements MobileClientInterface {
 		}
 		return resultValue;
 	}
-
+/**
+ * 
+@author Bortman Limor
+ * @param command
+ * @param params
+ * @return
+ * @throws Exception
+ */
 	public JSONObject sendDataAndGetJSonObj(String command, String... params) throws Exception {
 		JSONObject jsonobj = new JSONObject();
 		jsonobj.put("Command", command);
@@ -204,10 +179,10 @@ public class RobotiumClientImpl implements MobileClientInterface {
 		return result;
 	}
 
-	public String launch() throws Exception {
-		return sendData("launch");
+	public String launch(String launcherActivityClass) throws Exception {
+		return sendData("launch",launcherActivityClass);
 	}
-
+	
 	public String getTextView(int index) throws Exception {
 		return sendData("getTextView", Integer.toString(index));
 	}
@@ -279,15 +254,15 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	public void closeConnection() throws Exception {
 		sendData("exit");
 	}
-
-	private void setPortForwarding() throws Exception {
-		device.setPortForwarding(port, GeneralEnums.SERVERPORT);
-	}
-
 	public AbstractAndroidDevice getDevice() throws Exception {
 		return device;
 	}
 
+
+	private void setPortForwarding() throws Exception {
+		device.setPortForwarding(port, GeneralEnums.SERVERPORT);
+	}
+	
 	public void closeActivity() throws Exception {
 		sendData("closeActivity");
 	}
@@ -307,8 +282,49 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	public String isViewVisibleByViewId(int viewId) throws Exception {
 		return sendData("isViewVisibleByViewId", String.valueOf(viewId));
 	}
-
 	public String isButtonVisible(Attribute attribute, String value) throws Exception {
 		return sendData("isButtonVisible", attribute.name(), value);
 	}
+	/*####################################################Privet################*/
+	/**
+	 * Read all the details from the given properties and populate the object members.
+	 * 
+	 * @param configProperties
+	 */
+	private void readConfigFile(final Properties configProperties) {
+		if (isPropertyExist(configProperties, "port")) {
+			port = Integer.parseInt(configProperties.getProperty("port"));
+		}
+		logger.debug("Port is set to" + port);
+
+		if (!isPropertyExist(configProperties, "deviceSerial")) {
+			throw new IllegalStateException("Device serial was not specified in config file");
+		}
+		deviceSerial = configProperties.getProperty("deviceSerial");
+
+		logger.debug("Device serial is set to" + deviceSerial);
+
+		if (isPropertyExist(configProperties, "apkLocation")) {
+			apkLocation = configProperties.getProperty("apkLocation");
+		}
+		logger.debug("APK location is set to:" + apkLocation);
+
+		if (isPropertyExist(configProperties, "host")) {
+			host = configProperties.getProperty("host");
+		}
+		logger.debug("Host is set to" + host);
+	}
+	/**
+	 * Check if the property with the specified key exists in the specified properties object.
+	 * 
+	 * @param configProperties
+	 * @param key
+	 * @return true if and only if the property with the specified key exists.
+	 */
+	private boolean isPropertyExist(Properties configProperties, String key) {
+		final String value = configProperties.getProperty(key);
+		return value != null && !value.isEmpty();
+	}
+
+	
 }
