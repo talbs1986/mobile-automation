@@ -1,4 +1,4 @@
-package org.jsystemtest.mobile.robotium_client.infrastructure;
+package org.jsystemtest.mobile.client.infrastructure;
 
 import java.io.BufferedReader;
 import java.io.IOException;

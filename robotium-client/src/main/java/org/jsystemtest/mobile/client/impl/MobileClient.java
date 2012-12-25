@@ -1,4 +1,4 @@
-package org.jsystemtest.mobile.robotium_client.impl;
+package org.jsystemtest.mobile.client.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,21 +9,20 @@ import net.iharder.Base64;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.jsystemtest.mobile.client.infrastructure.TcpClient;
 import org.jsystemtest.mobile.common_mobile.client.enums.HardwareButtons;
 import org.jsystemtest.mobile.common_mobile.client.enums.Attribute;
 import org.jsystemtest.mobile.common_mobile.client.interfaces.MobileClientInterface;
 import org.jsystemtest.mobile.core.AdbController;
-import org.jsystemtest.mobile.core.ConnectionException;
 import org.jsystemtest.mobile.core.GeneralEnums;
 import org.jsystemtest.mobile.core.device.AbstractAndroidDevice;
 import org.jsystemtest.mobile.core.device.USBDevice;
-import org.jsystemtest.mobile.robotium_client.infrastructure.TcpClient;
 
 import com.android.ddmlib.InstallException;
 
-public class RobotiumClientImpl implements MobileClientInterface {
+public class MobileClient implements MobileClientInterface {
 
-	private static Logger logger = Logger.getLogger(RobotiumClientImpl.class);;
+	private static Logger logger = Logger.getLogger(MobileClient.class);;
 
 	private static final String SERVER_PACKAGE_NAME = "org.topq.jsystem.mobile";
 	private static final String SERVER_CLASS_NAME = "RobotiumServer";
@@ -40,7 +39,7 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	private static final String CONFIG_FILE = "/data/conf.txt";
 	private static String launcherActivityFullClassname = null;
 
-	public RobotiumClientImpl(String configFileName) throws Exception {
+	public MobileClient(String configFileName) throws Exception {
 		this(configFileName, true);
 	}
 	/**
@@ -48,7 +47,7 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	 * @param deployServer
 	 * @throws Exception
 	 */
-	public RobotiumClientImpl(String configFileName, boolean deployServer) throws Exception {
+	public MobileClient(String configFileName, boolean deployServer) throws Exception {
 		this(configFileName, deployServer, true);
 	}
 	/**
@@ -58,7 +57,7 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	 * @param launchServer - start the server 
 	 * @throws Exception
 	 */
-	public RobotiumClientImpl(Properties configProperties, boolean deployServer, boolean launchServer) throws InstallException, Exception {
+	public MobileClient(Properties configProperties, boolean deployServer, boolean launchServer) throws InstallException, Exception {
 		readConfigFile(configProperties);
 //		launchClient(launcherActivityFullClassname);
 //		launchServer(deployServer, launchServer, configProperties);
@@ -70,7 +69,7 @@ public class RobotiumClientImpl implements MobileClientInterface {
 		tcpClient = new TcpClient(host, port);
 	}
 
-	public RobotiumClientImpl(String configFileName, boolean deployServer, boolean launchServer) throws Exception {
+	public MobileClient(String configFileName, boolean deployServer, boolean launchServer) throws Exception {
 		final File configFile = new File(configFileName);
 		if (!configFile.exists()) {
 			throw new IOException("Configuration file was not found in " + configFileName);
@@ -339,7 +338,7 @@ public class RobotiumClientImpl implements MobileClientInterface {
 			prop.put("port", "8888");
 			prop.put("host", "localhost");
 			prop.put("deviceSerial", "emulator-5554");
-			MobileClientInterface x = new RobotiumClientImpl(prop,false,false);
+			MobileClientInterface x = new MobileClient(prop,false,false);
 			x.launch("com.tal.example.loginapp.LoginActivity");
 //			x.launch("org.topq.jsystem.mobile.RobotiumClientActivity");
 			x.enterText(0, "tal@tal.com");

@@ -1,4 +1,4 @@
-package org.topq.jsystem.mobile;
+package org.topq.jsystem.mobile.interfaces;
 
 import com.jayway.android.robotium.solo.Solo;
 

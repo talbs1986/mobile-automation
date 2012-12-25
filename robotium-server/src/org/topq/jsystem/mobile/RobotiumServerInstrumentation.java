@@ -7,6 +7,7 @@ import java.security.PrivilegedExceptionAction;
 
 import org.json.JSONObject;
 import org.jsystemtest.mobile.common_mobile.server.interfaces.IDataCallback;
+import org.topq.jsystem.mobile.interfaces.ISoloProvider;
 import org.topq.jsystem.util.ConfUtil;
 
 import com.jayway.android.robotium.solo.Solo;

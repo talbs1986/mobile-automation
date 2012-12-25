@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsystemtest.mobile.common_mobile.server.utils.CommandParser;
 import org.jsystemtest.mobile.common_mobile.server.utils.ScriptParser;
+import org.topq.jsystem.mobile.interfaces.ISoloProvider;
 
 import android.app.Activity;
 import android.app.Instrumentation;

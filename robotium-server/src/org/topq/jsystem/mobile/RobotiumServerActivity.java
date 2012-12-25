@@ -3,7 +3,7 @@ package org.topq.jsystem.mobile;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class RobotiumClientActivity extends Activity {
+public class RobotiumServerActivity extends Activity {
 
 
 	/** Called when the activity is first created. */
