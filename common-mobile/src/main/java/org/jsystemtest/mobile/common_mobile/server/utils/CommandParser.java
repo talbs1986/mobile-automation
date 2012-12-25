@@ -1,6 +1,4 @@
-package org.topq.jsystem.mobile;
-
-import java.util.Arrays;
+package org.jsystemtest.mobile.common_mobile.server.utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;

@@ -51,18 +51,24 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	public RobotiumClientImpl(String configFileName, boolean deployServer) throws Exception {
 		this(configFileName, deployServer, true);
 	}
-//	/**
-//	 * 
-//	 * @param configFileName- the location of the client config file
-//	 * @param deployServer - will install the serverApk (if you olrady install it the old version will be delete and the new one will be installed)
-//	 * @param launchServer - start the server 
-//	 * @throws Exception
-//	 */
-//	public RobotiumClientImpl(Properties configProperties, boolean deployServer, boolean launchServer) throws InstallException, Exception {
-//		readConfigFile(configProperties);
+	/**
+	 * 
+	 * @param configFileName- the location of the client config file
+	 * @param deployServer - will install the serverApk (if you olrady install it the old version will be delete and the new one will be installed)
+	 * @param launchServer - start the server 
+	 * @throws Exception
+	 */
+	public RobotiumClientImpl(Properties configProperties, boolean deployServer, boolean launchServer) throws InstallException, Exception {
+		readConfigFile(configProperties);
 //		launchClient(launcherActivityFullClassname);
 //		launchServer(deployServer, launchServer, configProperties);
-//	}
+		device = AdbController.getInstance().waitForDeviceToConnect(deviceSerial);
+//		setPortForwarding();
+//		device.setPortForwarding(4321,4321);
+		device.setPortForwarding(6262,4321);
+		device.setPortForwarding(8888,6262);
+		tcpClient = new TcpClient(host, port);
+	}
 
 	public RobotiumClientImpl(String configFileName, boolean deployServer, boolean launchServer) throws Exception {
 		final File configFile = new File(configFileName);
@@ -93,7 +99,7 @@ public class RobotiumClientImpl implements MobileClientInterface {
 //			logger.info("Start server on device");
 //			device.startServer(pakageName, launcherActivityFullClassname);
 //		}
-		setPortForwarding();		
+		setPortForwarding();	
 		tcpClient = new TcpClient(host, port);
 	}
 
@@ -324,6 +330,26 @@ public class RobotiumClientImpl implements MobileClientInterface {
 	private boolean isPropertyExist(Properties configProperties, String key) {
 		final String value = configProperties.getProperty(key);
 		return value != null && !value.isEmpty();
+	}
+	
+	
+	public static void main(String [ ] args) {
+		try {
+			Properties prop = new Properties();
+			prop.put("port", "8888");
+			prop.put("host", "localhost");
+			prop.put("deviceSerial", "emulator-5554");
+			MobileClientInterface x = new RobotiumClientImpl(prop,false,false);
+			x.launch("com.tal.example.loginapp.LoginActivity");
+//			x.launch("org.topq.jsystem.mobile.RobotiumClientActivity");
+			x.enterText(0, "tal@tal.com");
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.exit(0);
+		
 	}
 
 	

@@ -12,6 +12,8 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsystemtest.mobile.common_mobile.server.utils.CommandParser;
+import org.jsystemtest.mobile.common_mobile.server.utils.ScriptParser;
 
 import android.app.Activity;
 import android.app.Instrumentation;

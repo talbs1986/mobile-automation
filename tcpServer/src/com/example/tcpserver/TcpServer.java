@@ -4,20 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.ObjectOutputStream.PutField;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-
-import android.app.Activity;
-import android.content.ComponentName;
-import android.os.Bundle;
+import org.jsystemtest.mobile.common_mobile.server.utils.*;
 import android.util.Log;
 
 /**
@@ -30,41 +20,31 @@ import android.util.Log;
 public class TcpServer implements Runnable {
 
 	private static final String TAG = "TcpServer -> Tcp Application";
-
 	private static final int PORT = 6262;
-
-	private ArrayList<IDataCallback> listeners;
-
-	private String sendResponse;
-
+//	private ArrayList<IDataCallback> listeners;
+//	private String sendResponse;
 	private boolean done = false;
-	 
 	private TcpServerActivty activ;
-
-	
-//	private final Activity act;
 
 	public TcpServer(TcpServerActivty activ) {
 		this.activ = activ;
 	}
 
-	public void addTestListener(IDataCallback toAdd) {
-		listeners.add(toAdd);
-	}
-
-	public void removeTestListener(IDataCallback toRemove) {
-		for (IDataCallback current : listeners) {
-			if (current.equals(toRemove)) {
-				listeners.remove(toRemove);
-			}
-		}
-	}
-
-	public void gotTestResponse(String toAdd) {
-		sendResponse = toAdd;
-	}
-	
-	
+//	public void addTestListener(IDataCallback toAdd) {
+//		listeners.add(toAdd);
+//	}
+//
+//	public void removeTestListener(IDataCallback toRemove) {
+//		for (IDataCallback current : listeners) {
+//			if (current.equals(toRemove)) {
+//				listeners.remove(toRemove);
+//			}
+//		}
+//	}
+//
+//	public void gotTestResponse(String toAdd) {
+//		sendResponse = toAdd;
+//	}	
 
 	@Override
 	public void run() {
@@ -74,9 +54,7 @@ public class TcpServer implements Runnable {
 			serverSocket = new ServerSocket(PORT);
 			do {
 				Log.d(TAG, "Server is waiting for connection");
-				clientSocket = serverSocket.accept();
-				
-				
+				clientSocket = serverSocket.accept();	
 				PrintWriter clientOut = null;
 				BufferedReader clientIn = null;
 				try {
@@ -85,9 +63,8 @@ public class TcpServer implements Runnable {
 					clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 					String line = clientIn.readLine();
 					PrintWriter serverOutput = null;
-					BufferedReader serverInput = null;
+					BufferedReader serverInput = null;			
 					
-		
 					if (line != null) {
 						Log.d(TAG, "Received: '" + line + "'");
 						ScriptParser parser = new ScriptParser(line);
@@ -104,12 +81,12 @@ public class TcpServer implements Runnable {
 							serverOutput.flush();
 						}
 					}
-				
-					clientOut.println(serverInput.readLine());
-					
-				}  catch (Exception e) {
+					clientOut.println(serverInput.readLine());	
+				}  
+				catch (Exception e) {
 					Log.e(TAG, "Failed to process request due to" + e.getMessage());
-				} finally {
+				} 
+				finally {
 					// Closing resources
 					if (null != clientOut) {
 						clientOut.close();
@@ -121,19 +98,23 @@ public class TcpServer implements Runnable {
 						if (null != clientSocket) {
 							clientSocket.close();
 						}
-					} catch (Exception e) {
+					} 
+					catch (Exception e) {
 						Log.w(TAG, "exception was caught while closing resources", e);
 					}
 				} 
-			} while (!done);
-		} catch (Exception e) {
+			} 
+			while (!done);
+		} 
+		catch (Exception e) {
 			Log.e(TAG,"Exception accored : "+e.getMessage());
-		
-		}finally {
-			if (null != serverSocket ){
+		}
+		finally {
+			if (null != serverSocket ) {
 				try {
 					serverSocket.close();
-				} catch (IOException e) {
+				} 
+				catch (IOException e) {
 					Log.w(TAG, "exception was caught while closing resources", e);
 				}
 			}

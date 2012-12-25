@@ -1,4 +1,4 @@
-package org.topq.jsystem.mobile;
+package org.jsystemtest.mobile.common_mobile.server.interfaces;
 
 import org.json.JSONObject;
 

@@ -1,18 +1,8 @@
 package com.example.tcpserver;
 
-import org.json.JSONObject;
-
-
-import com.example.tcpserver.IDataCallback;
-
-
 import android.os.Bundle;
-import android.os.Looper;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Intent;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.util.Log;
 import android.view.Menu;
 
@@ -40,6 +30,7 @@ public class TcpServerActivty extends Activity {
         getMenuInflater().inflate(R.menu.activity_tcp_server, menu);
         return true;
     }
+    
     public void startServer()  {	
 		Log.d(TAG, "Start server");	
 		TcpServer server = new TcpServer(this);
@@ -48,14 +39,13 @@ public class TcpServerActivty extends Activity {
 		serverThread.start();
 		Log.i(TAG, "Server is up");
 		try {
-		while (continueRunning && server.isRunning()) {
+			while (continueRunning && server.isRunning()) {
 				Thread.sleep(1000);
-		}
-		} catch (InterruptedException e) {
+			}
+		} 
+		catch (InterruptedException e) {
 			Log.e(TAG,"InterruptedException" ,e);
 		}
 		Log.i(TAG, "Server is down");
-	}
-	
-	
+	}	
 }

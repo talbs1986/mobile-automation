@@ -8,6 +8,8 @@ import org.json.JSONObject;
 
 import android.content.Intent;
 import android.util.Log;
+import org.jsystemtest.mobile.common_mobile.client.interfaces.*;
+import org.jsystemtest.mobile.common_mobile.server.interfaces.IDataCallback;
 
 /**
  * @author Bortman Limor
@@ -21,8 +23,8 @@ public class DataCallbackImplement implements IDataCallback{
 		this.intent = intent;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.example.tcpserver.IDataCallback#dataReceived(java.lang.String)
+	/**
+	 * 
 	 */
 	@Override
 	public JSONObject dataReceived(String data) {

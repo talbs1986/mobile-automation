@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import org.json.JSONObject;
+import org.jsystemtest.mobile.common_mobile.server.interfaces.IDataCallback;
 
 import android.util.Log;
 

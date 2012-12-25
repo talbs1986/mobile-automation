@@ -2,15 +2,18 @@ package org.topq.jsystem.mobile;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.ServerSocket;
 import java.security.PrivilegedExceptionAction;
 
 import org.json.JSONObject;
+import org.jsystemtest.mobile.common_mobile.server.interfaces.IDataCallback;
 import org.topq.jsystem.util.ConfUtil;
 
 import com.jayway.android.robotium.solo.Solo;
 
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
@@ -45,9 +48,16 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 			}
 
 		}
+		Context x = getTargetContext();
+		Context z = getContext();
+		String y = x.getPackageName();
+		Log.i(TAG, "Taget Context : "+x);
+		Log.i(TAG, "Context : "+z);
+		Log.i(TAG, "Target Package : "+y);
 		start();
 	}
 	@Override	public void onStart() {
+		super.onStart();
 		startServer();
 	}
 		
@@ -78,7 +88,7 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 		if(myActive == null){
 			Log.d(TAG, "Start app");
 			Intent intent = new Intent(Intent.ACTION_MAIN);		
-			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);			    			
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			intent.setClassName(getTargetContext().getPackageName(),launcherActivityClass);	
 			myActive = startActivitySync(intent);
 			Log.d(TAG, "App is started");
@@ -112,7 +122,3 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 		}
 
 	}
-
-
-
-

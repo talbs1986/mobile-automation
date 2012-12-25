@@ -1,4 +1,4 @@
-package com.example.tcpserver;
+package org.jsystemtest.mobile.common_mobile.server.utils;
 
 import java.util.ArrayList;
 import java.util.List;
