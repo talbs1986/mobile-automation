@@ -7,5 +7,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/common-mobile"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/tcp-communication"/>
+	<classpathentry kind="lib" path="lib/tcp-communication-0.0.1-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.topq.jsystem.mobile"
+    package="org.topq.mobile.robotium.server"
     android:versionCode="1"
     android:versionName="1.0"
-    android:sharedUserId="org.topq.jsystem.mobile" >
+    android:sharedUserId="org.topq.mobile" >
 
     <uses-sdk android:minSdkVersion="10"/>
-    
-    
    
     <uses-permission android:name="android.permission.RUN_INSTRUMENTATION" />    
     <uses-permission android:name="android.permission.INTERNET"/> 
-   <instrumentation android:targetPackage="com.tal.example.loginapp"
-       android:name="org.topq.jsystem.mobile.RobotiumServerInstrumentation"/> 	       
+    <instrumentation android:targetPackage="com.tal.example.loginapp"
+       android:name="org.topq.mobile.robotium.server.RobotiumServerInstrumentation"/> 	       
     
    <instrumentation
         android:name="android.test.InstrumentationTestRunner"
@@ -23,7 +21,7 @@
         android:label="@string/app_name" >
         <uses-library android:name="android.test.runner"/>
         <activity
-            android:name="org.topq.jsystem.mobile.RobotiumServerActivity"
+            android:name="org.topq.mobile.robotium.server.RobotiumServerActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

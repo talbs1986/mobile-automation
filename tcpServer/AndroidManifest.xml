@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.tcpserver"
-     android:sharedUserId="org.topq.jsystem.mobile"
+    package="org.topq.mobile.tunnel.application"
+    android:sharedUserId="org.topq.mobile"
     android:versionCode="1"
     android:versionName="1.0" >
 
