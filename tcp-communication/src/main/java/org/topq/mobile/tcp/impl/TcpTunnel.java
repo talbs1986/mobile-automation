@@ -15,6 +15,9 @@ import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
 import android.util.Log;
 
 public class TcpTunnel implements Runnable {
+	
+	public static final int DEFAULT_TUNNEL_PORT = 6262;
+	public static final String DEFAULT_HOSTNAME = "localhost";
 
 	private static String TAG;
 	private int listenerPort;

@@ -1,6 +1,7 @@
 package org.topq.mobile.robotium.server;
 
 import org.json.JSONObject;
+import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.robotium.server.interfaces.ISoloProvider;
 import org.topq.mobile.tcp.interfaces.IDataCallback;
 import org.topq.mobile.tcp.impl.TcpExecutorServer;
@@ -23,8 +24,9 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 	private static final String TAG = "RobotiumServerInstrumentation";
 	private Activity myActive = null;
 	private SoloExecutor executor = null;
-	private static String launcherActivityClass;
+	private String launcherActivityClass;
 	private Solo solo = null;
+	private int port = TcpExecutorServer.DEFAULT_PORT;
 	
 	@Override	
 	public void onCreate(Bundle arguments) {	
@@ -32,12 +34,19 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 		super.onCreate(arguments);
 		if (arguments != null) {
 			if (arguments.containsKey("launcherActivityClass")) {
-				launcherActivityClass= arguments.getString("launcherActivityClass");
+				this.launcherActivityClass= arguments.getString("launcherActivityClass");
 				Log.d(TAG,"Activity class is : " + arguments.getString("launcherActivityClass")); 
 			} 
 			else {
 				Log.e (TAG, "no launcherActivityClass here!");
 				System.exit(100);
+			}
+			if (arguments.containsKey(ClientProperties.SERVER_PORT.name())) {
+				this.port = Integer.parseInt(arguments.getString(ClientProperties.SERVER_PORT.name()));
+				Log.i(TAG, "Recieved port : "+this.port);
+			}
+			else {
+				Log.d(TAG,"Using default port");
 			}
 		}
 		Log.d(TAG, "Taget Context : "+getTargetContext());
@@ -49,7 +58,7 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 	@Override	
 	public void onStart() {
 		super.onStart();
-		TcpExecutorServer server = TcpExecutorServer.getInstance(4321);
+		TcpExecutorServer server = TcpExecutorServer.getInstance(this.port);
 		server.registerExecutorToServer(this);
 		server.startServer();
 	}

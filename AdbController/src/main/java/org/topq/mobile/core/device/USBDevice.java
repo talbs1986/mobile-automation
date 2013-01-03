@@ -46,7 +46,10 @@ public class USBDevice extends AbstractAndroidDevice {
 		if (result != null) {
 			throw new InstallException("Failed to install: " + result, null);
 		}
-
+	}
+	
+	public void executePackageWithArguments(String packageName,String mainActivity,Map<String,String> args) throws Exception {
+		runAdbCommand(" -n "+packageName + "/."+mainActivity,args);
 	}
 
 	/**
@@ -75,17 +78,17 @@ public class USBDevice extends AbstractAndroidDevice {
 		if (null == adbLocation || !adbLocation.exists()) {
 			throw new IOException("Can't find adb location");
 		}
-		StringBuilder cmd = new StringBuilder(adbLocation.getAbsolutePath() + "\\adb -s " + device.getSerialNumber()+" shell am instrument ");
-		if(params != null){
-			cmd.append(" -e");
+		StringBuilder cmd = new StringBuilder(adbLocation.getAbsolutePath() + "\\adb -s " + device.getSerialNumber()+" shell am start ");
+		if(params != null){	
 			for(String name : params.keySet()){
-				cmd.append(" "+name+" "+params.get(name));
+				cmd.append(" -e "+name+" "+params.get(name));
 			}
 		}
-		cmd.append(" "+commandPrfix);
+		cmd.append(" -a android.intent.action.MAIN"+commandPrfix);
 		logger.info("Try to run command:" + cmd);
 		Runtime run = Runtime.getRuntime();
 		Process pr = run.exec(cmd.toString());
+		
 		try {
 			pr.waitFor();
 			Thread.sleep(TimeUnit.SECONDS.toMillis(2));

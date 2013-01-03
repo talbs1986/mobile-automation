@@ -18,6 +18,9 @@ import org.json.JSONObject;
  * 
  */
 public class TcpClient {
+	
+	public static final int DEFAULT_PORT = 8888;
+	
 	private static Logger logger = Logger.getLogger(TcpClient.class);
 	private String lastResult;
 	private final String host;

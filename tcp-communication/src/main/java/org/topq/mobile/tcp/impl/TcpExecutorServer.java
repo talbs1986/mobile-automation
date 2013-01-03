@@ -16,6 +16,8 @@ import android.util.Log;
 
 public class TcpExecutorServer implements Runnable {
 
+	public final static int DEFAULT_PORT = 4321;
+	
 	private boolean serverLiving;
 	private int port;
 	private String TAG;

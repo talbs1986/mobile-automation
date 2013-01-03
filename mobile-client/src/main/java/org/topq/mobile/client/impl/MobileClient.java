@@ -1,55 +1,52 @@
 package org.topq.mobile.client.impl;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 import net.iharder.Base64;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.topq.mobile.common.client.enums.Attribute;
+import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.common.client.enums.HardwareButtons;
 import org.topq.mobile.common.client.interfaces.MobileClientInterface;
 import org.topq.mobile.core.AdbController;
-import org.topq.mobile.core.GeneralEnums;
 import org.topq.mobile.core.device.AbstractAndroidDevice;
 import org.topq.mobile.core.device.USBDevice;
 import org.topq.mobile.tcp.impl.TcpClient;
+import org.topq.mobile.tcp.impl.TcpExecutorServer;
+import org.topq.mobile.tcp.impl.TcpTunnel;
 
 import com.android.ddmlib.InstallException;
 
 public class MobileClient implements MobileClientInterface {
 
-	private static Logger logger = Logger.getLogger(MobileClient.class);;
+	private static Logger logger = Logger.getLogger(MobileClient.class);
+	private static final String RESULT_STRING = "RESULT";
+	private static final String SERVER_PACKAGE_NAME = "org.topq.mobile.tunnel.application";
+	private static final String SERVER_CLASS_NAME = "TcpServerActivty";
+	private static final String DEFAULT_EMULATOR_SERIAL = "emulator-5554";
 
-	private static final String SERVER_PACKAGE_NAME = "org.topq.jsystem.mobile";
-	private static final String SERVER_CLASS_NAME = "RobotiumServer";
-	private static final String SERVER_TEST_NAME = "testMain";
+	private ClientConfiguration clientConfig;
 	private TcpClient tcpClient;
 	private USBDevice device;
+	private String deviceSerial = DEFAULT_EMULATOR_SERIAL;
 	private static boolean getScreenshots = false;
-	private static String pakageName = null;
-	private static int port = 4321;
-	private static String deviceSerial;
-	private static String apkLocation = null;
-	private static String host = "localhost";
-	private static final String RESULT_STRING = "RESULT";
-	private static final String CONFIG_FILE = "/data/conf.txt";
-	private static String launcherActivityFullClassname = null;
-
-	public MobileClient(String configFileName) throws Exception {
-		this(configFileName, true);
+	private int robotiumServerPort = TcpExecutorServer.DEFAULT_PORT;
+	private int clientPort = TcpClient.DEFAULT_PORT;
+	private int tunnelPort = TcpTunnel.DEFAULT_TUNNEL_PORT;
+	private String tunnelHost = TcpTunnel.DEFAULT_HOSTNAME;
+	private String autApkLocation;
+	private String robotiumServerApkLocation;
+	private String tunnelApkLocation;
+	
+	
+	public MobileClient() throws InstallException, Exception {
+		this(null,false,false);
 	}
-	/**
-	 * @param configFileName
-	 * @param deployServer
-	 * @throws Exception
-	 */
-	public MobileClient(String configFileName, boolean deployServer) throws Exception {
-		this(configFileName, deployServer, true);
+	
+	public MobileClient(boolean deployServer, boolean launchServer) throws InstallException, Exception {
+		this(null,deployServer,launchServer);
 	}
+	
 	/**
 	 * 
 	 * @param configFileName- the location of the client config file
@@ -57,67 +54,111 @@ public class MobileClient implements MobileClientInterface {
 	 * @param launchServer - start the server 
 	 * @throws Exception
 	 */
-	public MobileClient(Properties configProperties, boolean deployServer, boolean launchServer) throws InstallException, Exception {
-		readConfigFile(configProperties);
-//		launchClient(launcherActivityFullClassname);
-//		launchServer(deployServer, launchServer, configProperties);
-		device = AdbController.getInstance().waitForDeviceToConnect(deviceSerial);
-//		setPortForwarding();
-//		device.setPortForwarding(4321,4321);
-		device.setPortForwarding(6262,4321);
-		device.setPortForwarding(8888,6262);
-		tcpClient = new TcpClient(host, port);
+	public MobileClient(ClientConfiguration clientConfig, boolean deployServer, boolean launchServer) throws InstallException, Exception {
+		this.clientConfig = clientConfig;
+		this.readConfig();
+		this.buildConfig();
+		this.device = AdbController.getInstance().waitForDeviceToConnect(this.deviceSerial);
+		if (deployServer)
+			this.deployServer();
+		if (launchServer)
+			this.launchServer();
+		this.setPortForwarding();
+		this.tcpClient = new TcpClient(this.tunnelHost, this.clientPort);
 	}
 
-	public MobileClient(String configFileName, boolean deployServer, boolean launchServer) throws Exception {
-		final File configFile = new File(configFileName);
-		if (!configFile.exists()) {
-			throw new IOException("Configuration file was not found in " + configFileName);
+	private void buildConfig() {
+		if (this.clientConfig != null) {
+			if (!this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST))
+				this.clientConfig.buildProperty(ClientProperties.SERVER_HOST, this.tunnelHost);
+			if (!this.clientConfig.isPropertyExist(ClientProperties.SERVER_PORT))
+				this.clientConfig.buildProperty(ClientProperties.SERVER_PORT, String.valueOf(this.robotiumServerPort));
+			if (!this.clientConfig.isPropertyExist(ClientProperties.TUNNEL_PORT))
+				this.clientConfig.buildProperty(ClientProperties.TUNNEL_PORT, String.valueOf(this.tunnelPort));	
 		}
-
-		Properties configProperties = new Properties();
-		FileInputStream in = null;
-		try {
-			in = new FileInputStream(configFile);
-			configProperties.load(in);
-
-		} finally {
-			in.close();
-		}
-
-		readConfigFile(configProperties);
-
-		device = AdbController.getInstance().waitForDeviceToConnect(deviceSerial);
-//		if (deployServer) {
-//			device.installPackage(apkLocation, true);
-//			String serverConfFile = configProperties.getProperty("ServerConfFile");
-//			logger.debug("Server Conf File:" + serverConfFile);
-//			device.pushFileToDevice(CONFIG_FILE, serverConfFile);
-//		}
-//		if (launchServer) {
-//			logger.info("Start server on device");
-//			device.startServer(pakageName, launcherActivityFullClassname);
-//		}
-		setPortForwarding();	
-		tcpClient = new TcpClient(host, port);
 	}
 
-
-		private void launchServer(boolean deployServer, boolean launchServer, Properties configProperties) throws InstallException, Exception {
-		if (deployServer) {
-			logger.info("About to deploy server on device");
-			device.installPackage(apkLocation, true);
-			String serverConfFile = configProperties.getProperty("serverConfFile");
-			logger.debug("Server Conf File:" + serverConfFile);
-			device.pushFileToDevice(CONFIG_FILE, serverConfFile);
+	private void deployServer() throws InstallException {
+		if (this.autApkLocation != null && !this.autApkLocation.isEmpty()) {
+			logger.info("About to deploy Application Under Test on device");
+			device.installPackage(this.autApkLocation, true);
 		}
-		if (launchServer) {
-			logger.info("About to launch server on device");
-			device.runTestOnDevice(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, SERVER_TEST_NAME);
+		else {
+			logger.error("Error , apk location is empty");
 		}
+		
+		if (this.robotiumServerApkLocation != null && !this.robotiumServerApkLocation.isEmpty()) {
+			logger.info("About to deploy robotium server on device");
+			device.installPackage(this.robotiumServerApkLocation, true);
+		}
+		else {
+			logger.error("Error , apk location is empty");
+		}
+		
+		if (this.tunnelApkLocation != null && !this.tunnelApkLocation.isEmpty()) {
+			logger.info("About to deploy Tunnel server on device");
+			device.installPackage(this.tunnelApkLocation, true);
+		}
+		else {
+			logger.error("Error , apk location is empty");
+		}
+	}
+	
+	private void launchServer() throws Exception {
+		logger.info("About to launch server on device");
+		if (this.clientConfig != null)
+			device.executePackageWithArguments(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, this.clientConfig.toMap());
+		else
+			device.executePackageWithArguments(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, null);
 	}
 
 	
+	/**
+	 * Read all the details from the given properties and populate the object members.
+	 * 
+	 * @param configProperties
+	 */
+	private void readConfig() {
+		if (this.clientConfig != null && !this.clientConfig.isEmpty()) {
+			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST)) {
+				this.robotiumServerPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.SERVER_HOST));
+			}
+			logger.debug("Robotium Server Port is set to" + this.robotiumServerPort);
+			
+			if (this.clientConfig.isPropertyExist(ClientProperties.TUNNEL_PORT)) {
+				this.tunnelPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.TUNNEL_PORT));
+			}
+			logger.debug("Tunnel Port is set to" + this.tunnelPort);
+			
+			if (this.clientConfig.isPropertyExist(ClientProperties.CLIENT_PORT)) {
+				this.clientPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.CLIENT_PORT));
+			}
+			logger.debug("Client Port is set to" + this.clientPort);
+	
+			if (this.clientConfig.isPropertyExist(ClientProperties.DEVICE_SERIAL)) {
+				this.deviceSerial = this.clientConfig.getProperty(ClientProperties.DEVICE_SERIAL);
+			}
+			logger.debug("Device serial is set to" + this.deviceSerial);
+	
+			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_APK_LOCATION)) {
+				this.robotiumServerApkLocation = this.clientConfig.getProperty(ClientProperties.SERVER_APK_LOCATION);
+			}
+			logger.debug("Robotium Server APK location is set to:" + this.robotiumServerApkLocation);
+			
+			if (this.clientConfig.isPropertyExist(ClientProperties.TUNNEL_APK_LOCATION)) {
+				this.tunnelApkLocation = this.clientConfig.getProperty(ClientProperties.TUNNEL_APK_LOCATION);
+			}
+			logger.debug("Tunnel APK location is set to:" + this.tunnelApkLocation);
+	
+			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST)) {
+				this.tunnelHost = this.clientConfig.getProperty(ClientProperties.SERVER_HOST);
+			}
+			logger.debug("Tunnel Host is set to" + this.tunnelHost);
+		}
+		else {
+			logger.debug("Using Default Values");
+		}
+	}	
 
 
 	/**
@@ -129,7 +170,7 @@ public class MobileClient implements MobileClientInterface {
 	 *            serialised JSON object
 	 * @throws Exception
 	 */
-	public String sendData(String command, String... params) throws Exception {
+	private String sendData(String command, String... params) throws Exception {
 		String resultValue;
 		try {
 			JSONObject result = sendDataAndGetJSonObj(command, params);
@@ -155,15 +196,16 @@ public class MobileClient implements MobileClientInterface {
 		}
 		return resultValue;
 	}
-/**
- * 
-@author Bortman Limor
- * @param command
- * @param params
- * @return
- * @throws Exception
- */
-	public JSONObject sendDataAndGetJSonObj(String command, String... params) throws Exception {
+	
+	/**
+	 * 
+	@author Bortman Limor
+	 * @param command
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	private JSONObject sendDataAndGetJSonObj(String command, String... params) throws Exception {
 		JSONObject jsonobj = new JSONObject();
 		jsonobj.put("Command", command);
 		jsonobj.put("Params", params);
@@ -177,7 +219,8 @@ public class MobileClient implements MobileClientInterface {
 				throw new Exception("No data recvied from server! pleas check server log!");
 			}
 			result = new JSONObject(resultStr);
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			logger.error("Failed to send / receive data", e);
 			throw e;
 		}
@@ -263,9 +306,9 @@ public class MobileClient implements MobileClientInterface {
 		return device;
 	}
 
-
 	private void setPortForwarding() throws Exception {
-		device.setPortForwarding(port, GeneralEnums.SERVERPORT);
+		device.setPortForwarding(this.clientPort, this.tunnelPort);
+		device.setPortForwarding(this.tunnelPort, this.robotiumServerPort);
 	}
 	
 	public void closeActivity() throws Exception {
@@ -290,44 +333,5 @@ public class MobileClient implements MobileClientInterface {
 	public String isButtonVisible(Attribute attribute, String value) throws Exception {
 		return sendData("isButtonVisible", attribute.name(), value);
 	}
-	/*####################################################Privet################*/
-	/**
-	 * Read all the details from the given properties and populate the object members.
-	 * 
-	 * @param configProperties
-	 */
-	private void readConfigFile(final Properties configProperties) {
-		if (isPropertyExist(configProperties, "port")) {
-			port = Integer.parseInt(configProperties.getProperty("port"));
-		}
-		logger.debug("Port is set to" + port);
-
-		if (!isPropertyExist(configProperties, "deviceSerial")) {
-			throw new IllegalStateException("Device serial was not specified in config file");
-		}
-		deviceSerial = configProperties.getProperty("deviceSerial");
-
-		logger.debug("Device serial is set to" + deviceSerial);
-
-		if (isPropertyExist(configProperties, "apkLocation")) {
-			apkLocation = configProperties.getProperty("apkLocation");
-		}
-		logger.debug("APK location is set to:" + apkLocation);
-
-		if (isPropertyExist(configProperties, "host")) {
-			host = configProperties.getProperty("host");
-		}
-		logger.debug("Host is set to" + host);
-	}
-	/**
-	 * Check if the property with the specified key exists in the specified properties object.
-	 * 
-	 * @param configProperties
-	 * @param key
-	 * @return true if and only if the property with the specified key exists.
-	 */
-	private boolean isPropertyExist(Properties configProperties, String key) {
-		final String value = configProperties.getProperty(key);
-		return value != null && !value.isEmpty();
-	}
+	
 }
