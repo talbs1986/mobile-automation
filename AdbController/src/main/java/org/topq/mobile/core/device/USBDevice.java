@@ -78,7 +78,7 @@ public class USBDevice extends AbstractAndroidDevice {
 		if (null == adbLocation || !adbLocation.exists()) {
 			throw new IOException("Can't find adb location");
 		}
-		StringBuilder cmd = new StringBuilder(adbLocation.getAbsolutePath() + "\\adb -s " + device.getSerialNumber()+" shell am start ");
+		StringBuilder cmd = new StringBuilder(adbLocation.getAbsolutePath() + File.separator +"adb -s " + device.getSerialNumber()+" shell am start ");
 		if(params != null){	
 			for(String name : params.keySet()){
 				cmd.append(" -e "+name+" "+params.get(name));
