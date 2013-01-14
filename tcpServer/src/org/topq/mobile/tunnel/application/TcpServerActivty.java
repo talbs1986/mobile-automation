@@ -1,6 +1,7 @@
 package org.topq.mobile.tunnel.application;
 
 import org.topq.mobile.common.client.enums.ClientProperties;
+import org.topq.mobile.robotium.server.RobotiumServerActivity;
 import org.topq.mobile.tcp.impl.TcpClient;
 import org.topq.mobile.tcp.impl.TcpExecutorServer;
 import org.topq.mobile.tcp.impl.TcpTunnel;
@@ -11,6 +12,7 @@ import org.topq.mobile.tunnel.application.R;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.util.Log;
 import android.view.Menu;
 
@@ -19,23 +21,30 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
 	private int tunnelPort;
 	private int robotiumServerPort;
 	private String tunnelHostName;
+	private static boolean firstLaunch = true;
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (firstLaunch) {
+        	firstLaunch = false;
     	Log.i(TAG, "in on create");
     	readConfiguration();
     	
     	TcpTunnel tunnel = TcpTunnel.getInstance(this.tunnelPort, this.tunnelHostName, this.robotiumServerPort);
     	tunnel.registerInstrumentationLauncher(this);
     	tunnel.startTunnelCommunication();
+    	
+    	Intent intent = new Intent(this,RobotiumServerActivity.class);
+    	startActivity(intent);
+        }
     }
 
 	public void startInstrrumentationServer(String launcherActivityClass) {
 		Bundle savedInstanceState  = new Bundle();
     	savedInstanceState.putString("launcherActivityClass", launcherActivityClass);
     	savedInstanceState.putString(ClientProperties.SERVER_PORT.name(), String.valueOf(this.robotiumServerPort));
-		startInstrumentation(new ComponentName("org.topq.mobile.robotium.server", "org.topq.mobile.robotium.server.RobotiumServerInstrumentation"), null, savedInstanceState);
+		startInstrumentation(new ComponentName("org.topq.mobile.tunnel.application", "org.topq.mobile.robotium.server.RobotiumServerInstrumentation"), null, savedInstanceState);
 	}
 
     @Override
