@@ -1,6 +1,7 @@
 package org.topq.mobile.tunnel.application;
 
 import org.topq.mobile.common.client.enums.ClientProperties;
+import org.topq.mobile.robotium.server.ExecuterService;
 import org.topq.mobile.robotium.server.RobotiumServerActivity;
 import org.topq.mobile.tcp.impl.TcpClient;
 import org.topq.mobile.tcp.impl.TcpExecutorServer;
@@ -34,6 +35,8 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
     	TcpTunnel tunnel = TcpTunnel.getInstance(this.tunnelPort, this.tunnelHostName, this.robotiumServerPort);
     	tunnel.registerInstrumentationLauncher(this);
     	tunnel.startTunnelCommunication();
+    	
+    	startService(new Intent(ExecuterService.class.getName()));
     	
     	Intent intent = new Intent(this,RobotiumServerActivity.class);
     	startActivity(intent);
