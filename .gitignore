@@ -15,9 +15,8 @@
 
 #Java and Maven
 *.class
-*.jar
 target
-lib
+
 
 #JSystem files
 jsystem.properties
