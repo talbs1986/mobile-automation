@@ -1,47 +1,84 @@
 package org.topq.mobile.tunnel.application;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.robotium.server.ExecuterService;
+import org.topq.mobile.robotium.server.IExecuterService;
 import org.topq.mobile.robotium.server.RobotiumServerActivity;
 import org.topq.mobile.tcp.impl.TcpClient;
 import org.topq.mobile.tcp.impl.TcpExecutorServer;
 import org.topq.mobile.tcp.impl.TcpTunnel;
+import org.topq.mobile.tcp.interfaces.IDataCallback;
 import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
 
 import org.topq.mobile.tunnel.application.R;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.util.Log;
 import android.view.Menu;
 
-public class TcpServerActivty extends Activity implements IIntsrumentationLauncher {
+public class TcpServerActivty extends Activity implements IIntsrumentationLauncher,IDataCallback {
 	private static final String TAG = "TcpServerActivituy";
 	private int tunnelPort;
 	private int robotiumServerPort;
 	private String tunnelHostName;
 	private static boolean firstLaunch = true;
-
+	private IExecuterService api;
+	private ServiceConnection serviceConnection = new ServiceConnection() {
+		  @Override
+		  public void onServiceConnected(ComponentName name, IBinder service) {
+		    Log.i(TAG+" Service Connection", "Service connection established");
+		    api = IExecuterService.Stub.asInterface(service);   
+		  }
+		 
+		  @Override
+		  public void onServiceDisconnected(ComponentName name) {
+		    Log.i(TAG, "Service connection closed");      
+		  }
+	};
+		 
+			
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (firstLaunch) {
         	firstLaunch = false;
-    	Log.i(TAG, "in on create");
-    	readConfiguration();
-    	
-    	TcpTunnel tunnel = TcpTunnel.getInstance(this.tunnelPort, this.tunnelHostName, this.robotiumServerPort);
-    	tunnel.registerInstrumentationLauncher(this);
-    	tunnel.startTunnelCommunication();
-    	
-    	startService(new Intent(ExecuterService.class.getName()));
-    	
-    	Intent intent = new Intent(this,RobotiumServerActivity.class);
-    	startActivity(intent);
+	    	Log.i(TAG, "in on create");
+	    	readConfiguration();
+	    	
+	    	TcpTunnel tunnel = TcpTunnel.getInstance(this.tunnelPort, this.tunnelHostName, this.robotiumServerPort);
+	    	tunnel.registerInstrumentationLauncher(this);
+	    	tunnel.startTunnelCommunication();
+	    	
+	    	Intent service = new Intent(ExecuterService.class.getName());
+	    	startService(service);
+	    	bindService(service,serviceConnection , 0);
+	    	
+	    	startActivity(new Intent(this,RobotiumServerActivity.class));
         }
     }
+
+	@Override
+	public JSONObject dataReceived(String data) {
+		JSONObject result = null;
+		try {
+			result = new JSONObject(api.executeCommand(data));
+		}
+		catch (RemoteException e) {
+			Log.e(TAG,"Error in service API",e);
+		} catch (JSONException e) {
+			Log.e(TAG,"Error in json parse",e);
+		} 
+		return result;
+	}
 
 	public void startInstrrumentationServer(String launcherActivityClass) {
 		Bundle savedInstanceState  = new Bundle();

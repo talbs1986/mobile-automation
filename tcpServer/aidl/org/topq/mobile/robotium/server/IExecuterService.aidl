@@ -1,10 +1,10 @@
 package org.topq.mobile.robotium.server;
 
-import org.topq.mobile.robotium.server.MessageListener;
+import org.topq.mobile.tcp.interfaces.IDataCallback;
 
 interface IExecuterService {
 
-	String getLatestMessage();
-  	void addListener(MessageListener listener);
-  	void removeListener(MessageListener listener);
+	String executeCommand(String data);
+	void registerExecuter(in IDataCallback exectuer);
+
 }

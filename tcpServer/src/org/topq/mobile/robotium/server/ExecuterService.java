@@ -1,50 +1,49 @@
 package org.topq.mobile.robotium.server;
 
-
-import java.util.ArrayList;
-import java.util.List;
+import org.topq.mobile.robotium.server.interfaces.ISoloProvider;
+import org.topq.mobile.tcp.interfaces.IDataCallback;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.Log;
 
 public class ExecuterService extends Service {
-
-	List<MessageListener> listeners = new ArrayList<MessageListener>();
 	
 	private static final String TAG = "ExecuterService";
+	private IDataCallback commandExecuter;
 	
 	private IExecuterService.Stub apiEndPoint = new IExecuterService.Stub() {
 		
 		@Override
-		public String getLatestMessage() throws RemoteException {
-			return TAG+" : Message";
+		public String executeCommand(String data) {
+			Log.d(TAG, "Recieved : "+data);
+			return commandExecuter.dataReceived(data).toString();
 		}
-
+		
 		@Override
-		public void addListener(MessageListener listener) throws RemoteException {
-			Log.i(TAG,"Adding Listener ...");
-			listeners.add(listener);
+		public void registerExecuter(IDataCallback executer) {
+			Log.d(TAG,"Registering Executer : "+executer);
+			commandExecuter = executer;
 		}
-
-		@Override
-		public void removeListener(MessageListener listener) throws RemoteException {
-			Log.i(TAG,"Removing Listener ...");
-			listeners.remove(listener);
-		}
+		
 	};
 	
 	@Override
-	public IBinder onBind(Intent arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	public IBinder onBind(Intent intent) {
+		if (ExecuterService.class.getName().equals(intent.getAction())) {
+		    Log.d(TAG, "Bound by intent " + intent);
+		    return apiEndPoint;
+		} 
+		else {
+		    return null;
+		}
 	}
 
 	@Override
-	public void onCreate() {
-		
+	public void onCreate() {		
 		super.onCreate();
 		Log.i(TAG, "I was created");
 	}
