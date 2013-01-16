@@ -21,7 +21,13 @@ public class ExecuterService extends Service {
 		@Override
 		public String executeCommand(String data) {
 			Log.d(TAG, "Recieved : "+data);
-			return commandExecuter.dataReceived(data).toString();
+			try {
+				return commandExecuter.dataReceived(data);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
 		}
 		
 		@Override

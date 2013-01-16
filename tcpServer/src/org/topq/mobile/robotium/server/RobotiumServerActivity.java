@@ -16,7 +16,7 @@ public class RobotiumServerActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_tcp_server);
-		startInstrrumentationServer("com.tal.example.loginapp.LoginActivity");
+		
 	}
 	
 	public void startInstrrumentationServer(String launcherActivityClass) {

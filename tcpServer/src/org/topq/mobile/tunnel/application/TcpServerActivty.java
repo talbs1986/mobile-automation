@@ -20,6 +20,7 @@ import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
 import android.app.Activity;
+import android.app.LauncherActivity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -57,6 +58,7 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
 	    	
 	    	TcpTunnel tunnel = TcpTunnel.getInstance(this.tunnelPort, this.tunnelHostName, this.robotiumServerPort);
 	    	tunnel.registerInstrumentationLauncher(this);
+	    	tunnel.registerDataExecuter(this);
 	    	tunnel.startTunnelCommunication();
 	    	
 	    	Intent service = new Intent(ExecuterService.class.getName());
@@ -68,16 +70,23 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
     }
 
 	@Override
-	public JSONObject dataReceived(String data) {
-		JSONObject result = null;
+	public String dataReceived(String data) {
+		String result = null;
 		try {
-			result = new JSONObject(api.executeCommand(data));
+			if (data.contains("launch")) {
+				startInstrrumentationServer("com.tal.example.loginapp.LoginActivity");
+				try {
+					Thread.sleep(1000*5);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			result = api.executeCommand(data);
 		}
 		catch (RemoteException e) {
 			Log.e(TAG,"Error in service API",e);
-		} catch (JSONException e) {
-			Log.e(TAG,"Error in json parse",e);
-		} 
+		}  
 		return result;
 	}
 
@@ -127,13 +136,8 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
     }
 
 	@Override
-	public int describeContents() {
-		return 0;
+	public IBinder asBinder() {
+		// TODO Auto-generated method stub
+		return null;
 	}
-
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		// NOT USED
-	}
-	
 }

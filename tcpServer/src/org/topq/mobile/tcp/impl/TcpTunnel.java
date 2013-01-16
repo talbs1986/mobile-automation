@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.topq.mobile.common.server.utils.CommandParser;
 import org.topq.mobile.common.server.utils.ScriptParser;
+import org.topq.mobile.tcp.interfaces.IDataCallback;
 import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
 
 import android.util.Log;
@@ -25,6 +26,7 @@ public class TcpTunnel implements Runnable {
 	private String sendDataHostName;
 	private boolean serverLiving = true;
 	private IIntsrumentationLauncher instrumentationLauncher;
+	private IDataCallback dataExecuter;
 	
 	private TcpTunnel(int listenerPort,String sendDataHostName,int sendDataPort) {
 		this.listenerPort = listenerPort;
@@ -55,6 +57,11 @@ public class TcpTunnel implements Runnable {
 		this.instrumentationLauncher = instruLauncher;
 	}
 	
+	public void registerDataExecuter(IDataCallback dataExecuter) {
+		Log.d(TAG, "Registering data launcher : "+dataExecuter);
+		this.dataExecuter = dataExecuter;
+	}
+	
 	public void run() {
 		ServerSocket serverSocket = null;
 		Socket clientSocket = null;
@@ -70,8 +77,8 @@ public class TcpTunnel implements Runnable {
 					clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
 					clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 					String line = clientIn.readLine();
-					PrintWriter serverOutput = null;
-					BufferedReader serverInput = null;			
+//					PrintWriter serverOutput = null;
+//					BufferedReader serverInput = null;			
 					
 					if (line != null) {
 						Log.d(TAG, "Received: '" + line + "'");
@@ -81,15 +88,15 @@ public class TcpTunnel implements Runnable {
 								this.instrumentationLauncher.startInstrrumentationServer(command.getArguments().getString(0));
 								Thread.sleep(TimeUnit.SECONDS.toMillis(5));
 							}
-							Socket socket = new Socket(this.sendDataHostName, this.sendDataPort);
-							socket.setTcpNoDelay(true);
-							serverOutput = new PrintWriter(socket.getOutputStream());
-							serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-							serverOutput.append(line+"\n");
-							serverOutput.flush();
+//							Socket socket = new Socket(this.sendDataHostName, this.sendDataPort);
+//							socket.setTcpNoDelay(true);
+//							serverOutput = new PrintWriter(socket.getOutputStream());
+//							serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//							serverOutput.append(line+"\n");
+//							serverOutput.flush();
 						}
 					}
-					clientOut.println(serverInput.readLine());	
+					clientOut.println(dataExecuter.dataReceived(line));	
 				}  
 				catch (Exception e) {
 					Log.e(TAG, "Failed to process request due to" + e.getMessage());

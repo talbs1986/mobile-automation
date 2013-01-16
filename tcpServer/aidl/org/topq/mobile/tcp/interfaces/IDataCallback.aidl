@@ -1,3 +1,5 @@
 package org.topq.mobile.tcp.interfaces;
 
-parcelable IDataCallback;
+interface IDataCallback  {
+	String dataReceived(String data);
+}

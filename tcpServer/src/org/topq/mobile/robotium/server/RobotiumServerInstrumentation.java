@@ -28,7 +28,7 @@ import android.util.Log;
  * @author Bortman Limor
  *
  */
-public class RobotiumServerInstrumentation extends Instrumentation implements IDataCallback, ISoloProvider {
+public class RobotiumServerInstrumentation extends Instrumentation implements ISoloProvider {
 	
 	private static final String TAG = "RobotiumServerInstrumentation";
 	private Activity myActive = null;
@@ -37,19 +37,38 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 	private Solo solo = null;
 	private int port = TcpExecutorServer.DEFAULT_PORT;
 	private IExecuterService api;
-	public static IDataCallback myInstance;
 	
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		  @Override
 		  public void onServiceConnected(ComponentName name, IBinder service) {
 		    Log.i(TAG+" Service Connection", "Service connection established");
 		    api = IExecuterService.Stub.asInterface(service);   
+		    try {
+				api.registerExecuter(executerListener);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		  }
 		 
 		  @Override
 		  public void onServiceDisconnected(ComponentName name) {
 		    Log.i(TAG, "Service connection closed");      
 		  }
+	};
+	
+	private IDataCallback.Stub executerListener = new IDataCallback.Stub() {
+		@Override
+		public String dataReceived(String data) throws RemoteException {
+			String result = null;
+			try {
+				result = getExecutor().execute(data).toString();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return result;
+		}
 	};
 	
 	@Override	
@@ -85,14 +104,6 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 	@Override	
 	public void onStart() {
 		super.onStart();
-		try {
-			myInstance = this;
-			Log.i(TAG, "Instance is : "+myInstance);
-			api.registerExecuter(myInstance);
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			Log.e(TAG, "Error on register executer", e);
-		}
 //		TcpExecutorServer server = TcpExecutorServer.getInstance(this.port);
 //		server.registerExecutorToServer(this);
 //		server.startServer();
@@ -126,27 +137,23 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 		return executor;	
 	}
 		
-	@Override
-	public JSONObject dataReceived(String data) {
-		Log.i(TAG, "Recieved data " + data);
-		try {
-			return getExecutor().execute(data);
-		}
-		catch (Exception e) {
-			Log.e(TAG, "Failed to process data " + data, e);
-			e.printStackTrace();
-		}
-		return new JSONObject();
-	}
+//	@Override
+//	public JSONObject dataReceived(String data) {
+//		Log.i(TAG, "Recieved data " + data);
+//		try {
+//			return getExecutor().execute(data);
+//		}
+//		catch (Exception e) {
+//			Log.e(TAG, "Failed to process data " + data, e);
+//			e.printStackTrace();
+//		}
+//		return new JSONObject();
+//	}
 
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		// NOT IN USE	
-	}
+//	@Override
+//	public IBinder asBinder() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 }

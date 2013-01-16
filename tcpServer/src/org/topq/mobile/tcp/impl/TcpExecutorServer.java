@@ -86,7 +86,7 @@ public class TcpExecutorServer implements Runnable {
 						JSONObject response = null;
 						for (IDataCallback listener : listeners) {
 							Log.d(TAG, "Sending execute command to : "+listener);
-							response = listener.dataReceived(line);
+//							response = listener.dataReceived(line);
 							Log.i(TAG, "Recieved response : "+response);
 						}
 						out.println(response);
