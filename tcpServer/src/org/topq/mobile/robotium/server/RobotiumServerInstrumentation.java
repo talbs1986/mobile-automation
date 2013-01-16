@@ -1,18 +1,27 @@
 package org.topq.mobile.robotium.server;
 
+import java.io.Serializable;
+
 import org.json.JSONObject;
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.robotium.server.interfaces.ISoloProvider;
 import org.topq.mobile.tcp.interfaces.IDataCallback;
 import org.topq.mobile.tcp.impl.TcpExecutorServer;
+import org.topq.mobile.tunnel.application.TcpServerActivty;
 
 import com.jayway.android.robotium.solo.Solo;
 
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.Looper;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.os.RemoteException;
 import android.util.Log;
 /**
  * 
@@ -27,6 +36,21 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 	private String launcherActivityClass;
 	private Solo solo = null;
 	private int port = TcpExecutorServer.DEFAULT_PORT;
+	private IExecuterService api;
+	public static IDataCallback myInstance;
+	
+	private ServiceConnection serviceConnection = new ServiceConnection() {
+		  @Override
+		  public void onServiceConnected(ComponentName name, IBinder service) {
+		    Log.i(TAG+" Service Connection", "Service connection established");
+		    api = IExecuterService.Stub.asInterface(service);   
+		  }
+		 
+		  @Override
+		  public void onServiceDisconnected(ComponentName name) {
+		    Log.i(TAG, "Service connection closed");      
+		  }
+	};
 	
 	@Override	
 	public void onCreate(Bundle arguments) {	
@@ -52,15 +76,26 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 		Log.d(TAG, "Taget Context : "+getTargetContext());
 		Log.d(TAG, "This Context : "+getContext());
 		Log.d(TAG, "Target Package : "+getTargetContext().getPackageName());
+    	Intent service = new Intent(ExecuterService.class.getName());	
+    	getContext().bindService(service,serviceConnection , 0);
+    
 		start();
 	}
 	
 	@Override	
 	public void onStart() {
 		super.onStart();
-		TcpExecutorServer server = TcpExecutorServer.getInstance(this.port);
-		server.registerExecutorToServer(this);
-		server.startServer();
+		try {
+			myInstance = this;
+			Log.i(TAG, "Instance is : "+myInstance);
+			api.registerExecuter(myInstance);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			Log.e(TAG, "Error on register executer", e);
+		}
+//		TcpExecutorServer server = TcpExecutorServer.getInstance(this.port);
+//		server.registerExecutorToServer(this);
+//		server.startServer();
 	}
 
 	void prepareLooper() {  
@@ -103,4 +138,15 @@ public class RobotiumServerInstrumentation extends Instrumentation implements ID
 		}
 		return new JSONObject();
 	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		// NOT IN USE	
+	}
+
 }

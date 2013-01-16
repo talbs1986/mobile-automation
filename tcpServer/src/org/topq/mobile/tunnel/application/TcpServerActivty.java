@@ -1,12 +1,13 @@
 package org.topq.mobile.tunnel.application;
 
+import java.io.Serializable;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.robotium.server.ExecuterService;
 import org.topq.mobile.robotium.server.IExecuterService;
 import org.topq.mobile.robotium.server.RobotiumServerActivity;
-import org.topq.mobile.tcp.impl.TcpClient;
 import org.topq.mobile.tcp.impl.TcpExecutorServer;
 import org.topq.mobile.tcp.impl.TcpTunnel;
 import org.topq.mobile.tcp.interfaces.IDataCallback;
@@ -15,8 +16,8 @@ import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
 import org.topq.mobile.tunnel.application.R;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
+import android.os.Parcel;
 import android.os.RemoteException;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -26,7 +27,7 @@ import android.util.Log;
 import android.view.Menu;
 
 public class TcpServerActivty extends Activity implements IIntsrumentationLauncher,IDataCallback {
-	private static final String TAG = "TcpServerActivituy";
+	private static final String TAG = "TcpServerActivity";
 	private int tunnelPort;
 	private int robotiumServerPort;
 	private String tunnelHostName;
@@ -124,4 +125,15 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
     	Log.i(TAG, "Recived Argument tunnel host name : "+String.valueOf(this.tunnelHostName));
     	
     }
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		// NOT USED
+	}
+	
 }
