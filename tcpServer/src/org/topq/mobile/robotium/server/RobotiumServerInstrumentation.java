@@ -6,7 +6,6 @@ import org.json.JSONObject;
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.robotium.server.interfaces.ISoloProvider;
 import org.topq.mobile.tcp.interfaces.IDataCallback;
-import org.topq.mobile.tcp.impl.TcpExecutorServer;
 import org.topq.mobile.tunnel.application.TcpServerActivty;
 
 import com.jayway.android.robotium.solo.Solo;
@@ -35,16 +34,15 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 	private SoloExecutor executor = null;
 	private String launcherActivityClass;
 	private Solo solo = null;
-	private int port = TcpExecutorServer.DEFAULT_PORT;
-	private IExecuterService api;
+	private IExecutorService api;
 	
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		  @Override
 		  public void onServiceConnected(ComponentName name, IBinder service) {
-		    Log.i(TAG+" Service Connection", "Service connection established");
-		    api = IExecuterService.Stub.asInterface(service);   
+		    Log.i(TAG, "Service connection established");
+		    api = IExecutorService.Stub.asInterface(service);   
 		    try {
-				api.registerExecuter(executerListener);
+				api.registerExecutor(executorListener);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -57,7 +55,7 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 		  }
 	};
 	
-	private IDataCallback.Stub executerListener = new IDataCallback.Stub() {
+	private IDataCallback.Stub executorListener = new IDataCallback.Stub() {
 		@Override
 		public String dataReceived(String data) throws RemoteException {
 			String result = null;
@@ -84,18 +82,11 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 				Log.e (TAG, "no launcherActivityClass here!");
 				System.exit(100);
 			}
-			if (arguments.containsKey(ClientProperties.SERVER_PORT.name())) {
-				this.port = Integer.parseInt(arguments.getString(ClientProperties.SERVER_PORT.name()));
-				Log.i(TAG, "Recieved port : "+this.port);
-			}
-			else {
-				Log.d(TAG,"Using default port");
-			}
 		}
-		Log.d(TAG, "Taget Context : "+getTargetContext());
+		Log.d(TAG, "Target Context : "+getTargetContext());
 		Log.d(TAG, "This Context : "+getContext());
 		Log.d(TAG, "Target Package : "+getTargetContext().getPackageName());
-    	Intent service = new Intent(ExecuterService.class.getName());	
+    	Intent service = new Intent(ExecutorService.class.getName());	
     	getContext().bindService(service,serviceConnection , 0);
     
 		start();
@@ -104,9 +95,6 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 	@Override	
 	public void onStart() {
 		super.onStart();
-//		TcpExecutorServer server = TcpExecutorServer.getInstance(this.port);
-//		server.registerExecutorToServer(this);
-//		server.startServer();
 	}
 
 	void prepareLooper() {  
@@ -136,24 +124,4 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 		}		
 		return executor;	
 	}
-		
-//	@Override
-//	public JSONObject dataReceived(String data) {
-//		Log.i(TAG, "Recieved data " + data);
-//		try {
-//			return getExecutor().execute(data);
-//		}
-//		catch (Exception e) {
-//			Log.e(TAG, "Failed to process data " + data, e);
-//			e.printStackTrace();
-//		}
-//		return new JSONObject();
-//	}
-
-//	@Override
-//	public IBinder asBinder() {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
 }

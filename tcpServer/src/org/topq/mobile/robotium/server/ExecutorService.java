@@ -1,22 +1,19 @@
 package org.topq.mobile.robotium.server;
 
-import org.topq.mobile.robotium.server.interfaces.ISoloProvider;
 import org.topq.mobile.tcp.interfaces.IDataCallback;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.Log;
 
-public class ExecuterService extends Service {
+public class ExecutorService extends Service {
 	
 	private static final String TAG = "ExecuterService";
 	private IDataCallback commandExecuter;
 	
-	private IExecuterService.Stub apiEndPoint = new IExecuterService.Stub() {
+	private IExecutorService.Stub apiEndPoint = new IExecutorService.Stub() {
 		
 		@Override
 		public String executeCommand(String data) {
@@ -31,16 +28,16 @@ public class ExecuterService extends Service {
 		}
 		
 		@Override
-		public void registerExecuter(IDataCallback executer) {
-			Log.d(TAG,"Registering Executer : "+executer);
-			commandExecuter = executer;
+		public void registerExecutor(IDataCallback executor) {
+			Log.d(TAG,"Registering Executer : "+executor);
+			commandExecuter = executor;
 		}
 		
 	};
 	
 	@Override
 	public IBinder onBind(Intent intent) {
-		if (ExecuterService.class.getName().equals(intent.getAction())) {
+		if (ExecutorService.class.getName().equals(intent.getAction())) {
 		    Log.d(TAG, "Bound by intent " + intent);
 		    return apiEndPoint;
 		} 

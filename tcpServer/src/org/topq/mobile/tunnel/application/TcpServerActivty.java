@@ -1,15 +1,9 @@
 package org.topq.mobile.tunnel.application;
 
-import java.io.Serializable;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.topq.mobile.common.client.enums.ClientProperties;
-import org.topq.mobile.robotium.server.ExecuterService;
-import org.topq.mobile.robotium.server.IExecuterService;
-import org.topq.mobile.robotium.server.RobotiumServerActivity;
-import org.topq.mobile.tcp.impl.TcpExecutorServer;
-import org.topq.mobile.tcp.impl.TcpTunnel;
+import org.topq.mobile.robotium.server.ExecutorService;
+import org.topq.mobile.robotium.server.IExecutorService;
+import org.topq.mobile.tcp.impl.TcpServer;
 import org.topq.mobile.tcp.interfaces.IDataCallback;
 import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
 
@@ -17,10 +11,8 @@ import org.topq.mobile.tunnel.application.R;
 
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Parcel;
 import android.os.RemoteException;
 import android.app.Activity;
-import android.app.LauncherActivity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -29,16 +21,14 @@ import android.view.Menu;
 
 public class TcpServerActivty extends Activity implements IIntsrumentationLauncher,IDataCallback {
 	private static final String TAG = "TcpServerActivity";
-	private int tunnelPort;
-	private int robotiumServerPort;
-	private String tunnelHostName;
+	private int serverPort;
 	private static boolean firstLaunch = true;
-	private IExecuterService api;
+	private IExecutorService api;
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		  @Override
 		  public void onServiceConnected(ComponentName name, IBinder service) {
-		    Log.i(TAG+" Service Connection", "Service connection established");
-		    api = IExecuterService.Stub.asInterface(service);   
+		    Log.i(TAG, "Service connection established");
+		    api = IExecutorService.Stub.asInterface(service);   
 		  }
 		 
 		  @Override
@@ -53,19 +43,18 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
         super.onCreate(savedInstanceState);
         if (firstLaunch) {
         	firstLaunch = false;
-	    	Log.i(TAG, "in on create");
 	    	readConfiguration();
 	    	
-	    	TcpTunnel tunnel = TcpTunnel.getInstance(this.tunnelPort, this.tunnelHostName, this.robotiumServerPort);
+	    	TcpServer tunnel = TcpServer.getInstance(this.serverPort);
 	    	tunnel.registerInstrumentationLauncher(this);
 	    	tunnel.registerDataExecuter(this);
 	    	tunnel.startTunnelCommunication();
 	    	
-	    	Intent service = new Intent(ExecuterService.class.getName());
+	    	Intent service = new Intent(ExecutorService.class.getName());
 	    	startService(service);
 	    	bindService(service,serviceConnection , 0);
 	    	
-	    	startActivity(new Intent(this,RobotiumServerActivity.class));
+//	    	startActivity(new Intent(this,RobotiumServerActivity.class));
         }
     }
 
@@ -73,15 +62,6 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
 	public String dataReceived(String data) {
 		String result = null;
 		try {
-			if (data.contains("launch")) {
-				startInstrrumentationServer("com.tal.example.loginapp.LoginActivity");
-				try {
-					Thread.sleep(1000*5);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
 			result = api.executeCommand(data);
 		}
 		catch (RemoteException e) {
@@ -93,7 +73,6 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
 	public void startInstrrumentationServer(String launcherActivityClass) {
 		Bundle savedInstanceState  = new Bundle();
     	savedInstanceState.putString("launcherActivityClass", launcherActivityClass);
-    	savedInstanceState.putString(ClientProperties.SERVER_PORT.name(), String.valueOf(this.robotiumServerPort));
 		startInstrumentation(new ComponentName("org.topq.mobile.tunnel.application", "org.topq.mobile.robotium.server.RobotiumServerInstrumentation"), null, savedInstanceState);
 	}
 
@@ -106,33 +85,13 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
     private void readConfiguration() {
     	String tmpVal = getIntent().getStringExtra(ClientProperties.TUNNEL_PORT.name());
     	if (tmpVal != null && tmpVal.length() != 0) {
-    		this.tunnelPort = Integer.parseInt(tmpVal);	
-    	}
-    	else {
-    		Log.d(TAG, "Using default tunnel port");
-    		this.tunnelPort = TcpTunnel.DEFAULT_TUNNEL_PORT;
-    	}
-    	tmpVal = getIntent().getStringExtra(ClientProperties.SERVER_PORT.name());
-    	if (tmpVal != null && tmpVal.length() != 0) {
-    		this.robotiumServerPort = Integer.parseInt(tmpVal);	
+    		this.serverPort = Integer.parseInt(tmpVal);	
     	}
     	else {
     		Log.d(TAG, "Using default server port");
-    		this.robotiumServerPort = TcpExecutorServer.DEFAULT_PORT;
+    		this.serverPort = TcpServer.DEFAULT_SERVER_PORT;
     	}
-    	tmpVal = getIntent().getStringExtra(ClientProperties.SERVER_HOST.name());
-    	if (tmpVal != null && tmpVal.length() != 0) {
-    		this.tunnelHostName = tmpVal;	
-    	}
-    	else {
-    		Log.d(TAG, "Using default hostname");
-    		this.tunnelHostName = TcpTunnel.DEFAULT_HOSTNAME;
-    	}
-
-    	Log.i(TAG, "Recived Argument tunnel port : "+String.valueOf(this.tunnelPort));
-    	Log.i(TAG, "Recived Argument Robotium server port : "+String.valueOf(this.robotiumServerPort));
-    	Log.i(TAG, "Recived Argument tunnel host name : "+String.valueOf(this.tunnelHostName));
-    	
+    	Log.i(TAG, "Recived Argument server port : "+String.valueOf(this.serverPort));   	
     }
 
 	@Override

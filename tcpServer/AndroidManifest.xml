@@ -30,16 +30,11 @@
             </intent-filter>
         </activity>
         
-        <activity
-            android:name="org.topq.mobile.robotium.server.RobotiumServerActivity"
-            android:label="@string/title_activity_robotium_server">
-        </activity>
-        
         <service
-      		android:name="org.topq.mobile.robotium.server.ExecuterService"
+      		android:name="org.topq.mobile.robotium.server.ExecutorService"
       		android:process=":remote">
       		<intent-filter>
-        		<action android:name="org.topq.mobile.robotium.server.ExecuterService" />
+        		<action android:name="org.topq.mobile.robotium.server.ExecutorService" />
       </intent-filter>
     </service>
     </application>

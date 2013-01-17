@@ -15,40 +15,36 @@ import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
 
 import android.util.Log;
 
-public class TcpTunnel implements Runnable {
+public class TcpServer implements Runnable {
 	
-	public static final int DEFAULT_TUNNEL_PORT = 6262;
-	public static final String DEFAULT_HOSTNAME = "localhost";
+	public static final int DEFAULT_SERVER_PORT = 6262;
 
 	private static String TAG;
 	private int listenerPort;
-	private int sendDataPort;
-	private String sendDataHostName;
 	private boolean serverLiving = true;
 	private IIntsrumentationLauncher instrumentationLauncher;
-	private IDataCallback dataExecuter;
+	private IDataCallback dataExecutor;
 	
-	private TcpTunnel(int listenerPort,String sendDataHostName,int sendDataPort) {
+	private TcpServer(int listenerPort) {
 		this.listenerPort = listenerPort;
-		this.sendDataHostName = sendDataHostName;
-		this.sendDataPort = sendDataPort;
 		this.instrumentationLauncher = null;
-		TcpTunnel.TAG = "TcpTunnel("+this.sendDataHostName+":"+this.listenerPort+"->"+this.sendDataPort+")";
+		this.dataExecutor = null;
+		TcpServer.TAG = "TcpServer("+this.listenerPort+")";
 	}
 
-	public static TcpTunnel getInstance(int listenerPort,String sendDataHostName,int sendDataPort) {
-		return new TcpTunnel(listenerPort,sendDataHostName,sendDataPort);
+	public static TcpServer getInstance(int listenerPort) {
+		return new TcpServer(listenerPort);
 	}
 	
 	public void startTunnelCommunication() {
-		Thread tunnelThread = new Thread(this);
-		Log.i(TAG,"About to launch tunnel");
-		tunnelThread.start();	
-		Log.i(TAG,"Tunnel has start");
+		Thread serverThread = new Thread(this);
+		Log.i(TAG,"About to launch server");
+		serverThread.start();	
+		Log.i(TAG,"Server has start");
 	}
 	
 	public void stopTunnelCommunication() {
-		Log.d(TAG,"About to stop tunnel");
+		Log.d(TAG,"About to stop server");
 		this.serverLiving = false;
 	}
 	
@@ -59,7 +55,7 @@ public class TcpTunnel implements Runnable {
 	
 	public void registerDataExecuter(IDataCallback dataExecuter) {
 		Log.d(TAG, "Registering data launcher : "+dataExecuter);
-		this.dataExecuter = dataExecuter;
+		this.dataExecutor = dataExecuter;
 	}
 	
 	public void run() {
@@ -76,10 +72,7 @@ public class TcpTunnel implements Runnable {
 					Log.d(TAG, "Connection was established");
 					clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
 					clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-					String line = clientIn.readLine();
-//					PrintWriter serverOutput = null;
-//					BufferedReader serverInput = null;			
-					
+					String line = clientIn.readLine();	
 					if (line != null) {
 						Log.d(TAG, "Received: '" + line + "'");
 						ScriptParser parser = new ScriptParser(line);
@@ -88,15 +81,9 @@ public class TcpTunnel implements Runnable {
 								this.instrumentationLauncher.startInstrrumentationServer(command.getArguments().getString(0));
 								Thread.sleep(TimeUnit.SECONDS.toMillis(5));
 							}
-//							Socket socket = new Socket(this.sendDataHostName, this.sendDataPort);
-//							socket.setTcpNoDelay(true);
-//							serverOutput = new PrintWriter(socket.getOutputStream());
-//							serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//							serverOutput.append(line+"\n");
-//							serverOutput.flush();
 						}
 					}
-					clientOut.println(dataExecuter.dataReceived(line));	
+					clientOut.println(dataExecutor.dataReceived(line));	
 				}  
 				catch (Exception e) {
 					Log.e(TAG, "Failed to process request due to" + e.getMessage());

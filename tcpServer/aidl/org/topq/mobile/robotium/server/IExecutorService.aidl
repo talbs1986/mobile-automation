@@ -2,9 +2,9 @@ package org.topq.mobile.robotium.server;
 
 import org.topq.mobile.tcp.interfaces.IDataCallback;
 
-interface IExecuterService {
+interface IExecutorService {
 
 	String executeCommand(String data);
-	void registerExecuter(IDataCallback exectuer);
+	void registerExecutor(IDataCallback executor);
 
 }
