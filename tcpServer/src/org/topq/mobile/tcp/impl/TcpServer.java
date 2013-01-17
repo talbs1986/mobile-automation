@@ -16,8 +16,6 @@ import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
 import android.util.Log;
 
 public class TcpServer implements Runnable {
-	
-	public static final int DEFAULT_SERVER_PORT = 6262;
 
 	private static String TAG;
 	private int listenerPort;

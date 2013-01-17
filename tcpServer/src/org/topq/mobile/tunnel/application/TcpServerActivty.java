@@ -1,6 +1,7 @@
 package org.topq.mobile.tunnel.application;
 
 import org.topq.mobile.common.client.enums.ClientProperties;
+import org.topq.mobile.common.server.consts.TcpConsts;
 import org.topq.mobile.robotium.server.ExecutorService;
 import org.topq.mobile.robotium.server.IExecutorService;
 import org.topq.mobile.tcp.impl.TcpServer;
@@ -83,13 +84,13 @@ public class TcpServerActivty extends Activity implements IIntsrumentationLaunch
     }
     
     private void readConfiguration() {
-    	String tmpVal = getIntent().getStringExtra(ClientProperties.TUNNEL_PORT.name());
+    	String tmpVal = getIntent().getStringExtra(ClientProperties.SERVER_PORT.name());
     	if (tmpVal != null && tmpVal.length() != 0) {
     		this.serverPort = Integer.parseInt(tmpVal);	
     	}
     	else {
     		Log.d(TAG, "Using default server port");
-    		this.serverPort = TcpServer.DEFAULT_SERVER_PORT;
+    		this.serverPort = TcpConsts.SERVER_DEFAULT_PORT;
     	}
     	Log.i(TAG, "Recived Argument server port : "+String.valueOf(this.serverPort));   	
     }
