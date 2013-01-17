@@ -1,4 +1,4 @@
-package org.topq.mobile.tcp.impl;
+package org.topq.mobile.server.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,8 +10,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.topq.mobile.common.server.utils.CommandParser;
 import org.topq.mobile.common.server.utils.ScriptParser;
-import org.topq.mobile.tcp.interfaces.IDataCallback;
-import org.topq.mobile.tcp.interfaces.IIntsrumentationLauncher;
+import org.topq.mobile.server.interfaces.IIntsrumentationLauncher;
+import org.topq.mobile.server.interfaces.IDataCallback;
 
 import android.util.Log;
 
@@ -34,14 +34,14 @@ public class TcpServer implements Runnable {
 		return new TcpServer(listenerPort);
 	}
 	
-	public void startTunnelCommunication() {
+	public void startServerCommunication() {
 		Thread serverThread = new Thread(this);
 		Log.i(TAG,"About to launch server");
 		serverThread.start();	
 		Log.i(TAG,"Server has start");
 	}
 	
-	public void stopTunnelCommunication() {
+	public void stopServerCommunication() {
 		Log.d(TAG,"About to stop server");
 		this.serverLiving = false;
 	}
@@ -51,9 +51,9 @@ public class TcpServer implements Runnable {
 		this.instrumentationLauncher = instruLauncher;
 	}
 	
-	public void registerDataExecuter(IDataCallback dataExecuter) {
-		Log.d(TAG, "Registering data launcher : "+dataExecuter);
-		this.dataExecutor = dataExecuter;
+	public void registerDataExecutor(IDataCallback dataExecutor) {
+		Log.d(TAG, "Registering data launcher : "+dataExecutor);
+		this.dataExecutor = dataExecutor;
 	}
 	
 	public void run() {
@@ -62,12 +62,12 @@ public class TcpServer implements Runnable {
 		try {
 			serverSocket = new ServerSocket(this.listenerPort);
 			while (this.serverLiving) {
-				Log.d(TAG, "Server is waiting for connection");
+				Log.i(TAG, "Server is waiting for connection ...");
 				clientSocket = serverSocket.accept();	
 				PrintWriter clientOut = null;
 				BufferedReader clientIn = null;
 				try {
-					Log.d(TAG, "Connection was established");
+					Log.i(TAG, "Connection established");
 					clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
 					clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 					String line = clientIn.readLine();	
@@ -76,12 +76,16 @@ public class TcpServer implements Runnable {
 						ScriptParser parser = new ScriptParser(line);
 						for (CommandParser command : parser.getCommands()) {
 							if(command.getCommand().equals("launch") && this.instrumentationLauncher != null){
+								Log.d(TAG, "Recieved launch command");
 								this.instrumentationLauncher.startInstrrumentationServer(command.getArguments().getString(0));
 								Thread.sleep(TimeUnit.SECONDS.toMillis(5));
 							}
 						}
 					}
-					clientOut.println(dataExecutor.dataReceived(line));	
+					Log.i(TAG, "Sending command to executor");
+					String response = dataExecutor.dataReceived(line);
+					Log.d(TAG,"Command response is : "+response);
+					clientOut.println(response);	
 				}  
 				catch (Exception e) {
 					Log.e(TAG, "Failed to process request due to" + e.getMessage());
@@ -106,7 +110,7 @@ public class TcpServer implements Runnable {
 			} 
 		} 
 		catch (Exception e) {
-			Log.e(TAG,"Exception accored : "+e.getMessage());
+			Log.e(TAG,"Exception occured : "+e.getMessage());
 		}
 		finally {
 			if (null != serverSocket ) {

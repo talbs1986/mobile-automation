@@ -1,6 +1,6 @@
-package org.topq.mobile.robotium.server;
+package org.topq.mobile.server.interfaces;
 
-import org.topq.mobile.tcp.interfaces.IDataCallback;
+import org.topq.mobile.server.interfaces.IDataCallback;
 
 interface IExecutorService {
 

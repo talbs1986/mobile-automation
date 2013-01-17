@@ -1,12 +1,8 @@
-package org.topq.mobile.robotium.server;
+package org.topq.mobile.server.impl;
 
-import java.io.Serializable;
-
-import org.json.JSONObject;
-import org.topq.mobile.common.client.enums.ClientProperties;
-import org.topq.mobile.robotium.server.interfaces.ISoloProvider;
-import org.topq.mobile.tcp.interfaces.IDataCallback;
-import org.topq.mobile.tunnel.application.TcpServerActivty;
+import org.topq.mobile.server.interfaces.IExecutorService;
+import org.topq.mobile.server.interfaces.IDataCallback;
+import org.topq.mobile.server.interfaces.ISoloProvider;
 
 import com.jayway.android.robotium.solo.Solo;
 
@@ -18,8 +14,6 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.Log;
 /**
@@ -27,25 +21,25 @@ import android.util.Log;
  * @author Bortman Limor
  *
  */
-public class RobotiumServerInstrumentation extends Instrumentation implements ISoloProvider {
+public class RobotiumExecutor extends Instrumentation implements ISoloProvider {
 	
-	private static final String TAG = "RobotiumServerInstrumentation";
+	private static final String TAG = "RobotiumExecutor";
 	private Activity myActive = null;
 	private SoloExecutor executor = null;
 	private String launcherActivityClass;
 	private Solo solo = null;
-	private IExecutorService api;
+	private IExecutorService serviceApi;
 	
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		  @Override
 		  public void onServiceConnected(ComponentName name, IBinder service) {
 		    Log.i(TAG, "Service connection established");
-		    api = IExecutorService.Stub.asInterface(service);   
+		    serviceApi = IExecutorService.Stub.asInterface(service);   
 		    try {
-				api.registerExecutor(executorListener);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				serviceApi.registerExecutor(executorListener);
+			} 
+		    catch (RemoteException e) {
+				Log.e(TAG,"Error in registration" ,e);
 			}
 		  }
 		 
@@ -61,10 +55,11 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 			String result = null;
 			try {
 				result = getExecutor().execute(data).toString();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} 
+			catch (Exception e) {
+				Log.e(TAG, "Error in command execution", e);
 			}
+			Log.d(TAG, "Recieved cmd result : "+result);
 			return result;
 		}
 	};
@@ -75,7 +70,7 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 		super.onCreate(arguments);
 		if (arguments != null) {
 			if (arguments.containsKey("launcherActivityClass")) {
-				this.launcherActivityClass= arguments.getString("launcherActivityClass");
+				this.launcherActivityClass = arguments.getString("launcherActivityClass");
 				Log.d(TAG,"Activity class is : " + arguments.getString("launcherActivityClass")); 
 			} 
 			else {
@@ -104,12 +99,12 @@ public class RobotiumServerInstrumentation extends Instrumentation implements IS
 	@Override	
 	public Solo getSolo() {	
 		if(myActive == null) {
-			Log.i(TAG, "Starting main activity");
+			Log.i(TAG, "Starting AUT main activity");
 			Intent intent = new Intent(Intent.ACTION_MAIN);		
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			intent.setClassName(getTargetContext().getPackageName(),launcherActivityClass);	
-			myActive = startActivitySync(intent);
-			Log.d(TAG, "App is started");
+			intent.setClassName(getTargetContext().getPackageName(),this.launcherActivityClass);	
+			this.myActive = startActivitySync(intent);
+			Log.i(TAG, "App is started");
 		}
 		if(solo == null){
 			prepareLooper();

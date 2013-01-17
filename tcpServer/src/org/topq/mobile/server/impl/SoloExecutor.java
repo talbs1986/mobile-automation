@@ -1,4 +1,4 @@
-package org.topq.mobile.robotium.server;
+package org.topq.mobile.server.impl;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -14,7 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.topq.mobile.common.server.utils.CommandParser;
 import org.topq.mobile.common.server.utils.ScriptParser;
-import org.topq.mobile.robotium.server.interfaces.ISoloProvider;
+import org.topq.mobile.server.interfaces.ISoloProvider;
 
 import android.app.Activity;
 import android.app.Instrumentation;

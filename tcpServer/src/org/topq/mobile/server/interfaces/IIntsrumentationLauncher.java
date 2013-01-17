@@ -1,4 +1,4 @@
-package org.topq.mobile.tcp.interfaces;
+package org.topq.mobile.server.interfaces;
 
 public interface IIntsrumentationLauncher {
 	

@@ -1,6 +1,7 @@
-package org.topq.mobile.robotium.server;
+package org.topq.mobile.server.impl;
 
-import org.topq.mobile.tcp.interfaces.IDataCallback;
+import org.topq.mobile.server.interfaces.IExecutorService;
+import org.topq.mobile.server.interfaces.IDataCallback;
 
 import android.app.Service;
 import android.content.Intent;
@@ -10,8 +11,8 @@ import android.util.Log;
 
 public class ExecutorService extends Service {
 	
-	private static final String TAG = "ExecuterService";
-	private IDataCallback commandExecuter;
+	private static final String TAG = "ExecutorService";
+	private IDataCallback commandExecutor;
 	
 	private IExecutorService.Stub apiEndPoint = new IExecutorService.Stub() {
 		
@@ -19,18 +20,18 @@ public class ExecutorService extends Service {
 		public String executeCommand(String data) {
 			Log.d(TAG, "Recieved : "+data);
 			try {
-				return commandExecuter.dataReceived(data);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				return commandExecutor.dataReceived(data);
+			} 
+			catch (RemoteException e) {
+				Log.e(TAG,"Error in command execution",e);
 			}
 			return null;
 		}
 		
 		@Override
 		public void registerExecutor(IDataCallback executor) {
-			Log.d(TAG,"Registering Executer : "+executor);
-			commandExecuter = executor;
+			Log.d(TAG,"Registering Executor : "+executor);
+			commandExecutor = executor;
 		}
 		
 	};
@@ -49,7 +50,7 @@ public class ExecutorService extends Service {
 	@Override
 	public void onCreate() {		
 		super.onCreate();
-		Log.i(TAG, "I was created");
+		Log.i(TAG, "Is created");
 	}
 	
 }
