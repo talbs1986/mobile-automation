@@ -8,12 +8,11 @@ import org.topq.mobile.common.client.enums.Attribute;
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.common.client.enums.HardwareButtons;
 import org.topq.mobile.common.client.interfaces.MobileClientInterface;
+import org.topq.mobile.common.server.consts.TcpConsts;
 import org.topq.mobile.core.AdbController;
 import org.topq.mobile.core.device.AbstractAndroidDevice;
 import org.topq.mobile.core.device.USBDevice;
 import org.topq.mobile.tcp.impl.TcpClient;
-import org.topq.mobile.tcp.impl.TcpExecutorServer;
-import org.topq.mobile.tcp.impl.TcpTunnel;
 
 import com.android.ddmlib.InstallException;
 
@@ -30,13 +29,11 @@ public class MobileClient implements MobileClientInterface {
 	private USBDevice device;
 	private String deviceSerial = DEFAULT_EMULATOR_SERIAL;
 	private static boolean getScreenshots = false;
-	private int robotiumServerPort = TcpExecutorServer.DEFAULT_PORT;
+	private int serverPort = TcpConsts.SERVER_DEFAULT_PORT;
 	private int clientPort = TcpClient.DEFAULT_PORT;
-	private int tunnelPort = TcpTunnel.DEFAULT_TUNNEL_PORT;
-	private String tunnelHost = TcpTunnel.DEFAULT_HOSTNAME;
+	private String serverHost = TcpConsts.SERVER_DEFAULT_HOSTNAME;
 	private String autApkLocation;
-	private String robotiumServerApkLocation;
-	private String tunnelApkLocation;
+	private String serverApkLocation;
 	
 	
 	public MobileClient() throws InstallException, Exception {
@@ -64,17 +61,15 @@ public class MobileClient implements MobileClientInterface {
 		if (launchServer)
 			this.launchServer();
 		this.setPortForwarding();
-		this.tcpClient = new TcpClient(this.tunnelHost, this.clientPort);
+		this.tcpClient = new TcpClient(this.serverHost, this.clientPort);
 	}
 
 	private void buildConfig() {
 		if (this.clientConfig != null) {
 			if (!this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST))
-				this.clientConfig.buildProperty(ClientProperties.SERVER_HOST, this.tunnelHost);
+				this.clientConfig.buildProperty(ClientProperties.SERVER_HOST, this.serverHost);
 			if (!this.clientConfig.isPropertyExist(ClientProperties.SERVER_PORT))
-				this.clientConfig.buildProperty(ClientProperties.SERVER_PORT, String.valueOf(this.robotiumServerPort));
-			if (!this.clientConfig.isPropertyExist(ClientProperties.TUNNEL_PORT))
-				this.clientConfig.buildProperty(ClientProperties.TUNNEL_PORT, String.valueOf(this.tunnelPort));	
+				this.clientConfig.buildProperty(ClientProperties.SERVER_PORT, String.valueOf(this.serverPort));
 		}
 	}
 
@@ -87,17 +82,9 @@ public class MobileClient implements MobileClientInterface {
 			logger.error("Error , apk location is empty");
 		}
 		
-		if (this.robotiumServerApkLocation != null && !this.robotiumServerApkLocation.isEmpty()) {
-			logger.info("About to deploy robotium server on device");
-			device.installPackage(this.robotiumServerApkLocation, true);
-		}
-		else {
-			logger.error("Error , apk location is empty");
-		}
-		
-		if (this.tunnelApkLocation != null && !this.tunnelApkLocation.isEmpty()) {
-			logger.info("About to deploy Tunnel server on device");
-			device.installPackage(this.tunnelApkLocation, true);
+		if (this.serverApkLocation != null && !this.serverApkLocation.isEmpty()) {
+			logger.info("About to deploy Server on device");
+			device.installPackage(this.serverApkLocation, true);
 		}
 		else {
 			logger.error("Error , apk location is empty");
@@ -121,14 +108,14 @@ public class MobileClient implements MobileClientInterface {
 	private void readConfig() {
 		if (this.clientConfig != null && !this.clientConfig.isEmpty()) {
 			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST)) {
-				this.robotiumServerPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.SERVER_HOST));
+				this.serverHost = this.clientConfig.getProperty(ClientProperties.SERVER_HOST);
 			}
-			logger.debug("Robotium Server Port is set to" + this.robotiumServerPort);
+			logger.debug("Server Host is set to" + this.serverHost);
 			
-			if (this.clientConfig.isPropertyExist(ClientProperties.TUNNEL_PORT)) {
-				this.tunnelPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.TUNNEL_PORT));
+			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_PORT)) {
+				this.serverPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.SERVER_PORT));
 			}
-			logger.debug("Tunnel Port is set to" + this.tunnelPort);
+			logger.debug("Server Port is set to" + this.serverPort);
 			
 			if (this.clientConfig.isPropertyExist(ClientProperties.CLIENT_PORT)) {
 				this.clientPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.CLIENT_PORT));
@@ -139,21 +126,11 @@ public class MobileClient implements MobileClientInterface {
 				this.deviceSerial = this.clientConfig.getProperty(ClientProperties.DEVICE_SERIAL);
 			}
 			logger.debug("Device serial is set to" + this.deviceSerial);
-	
-			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_APK_LOCATION)) {
-				this.robotiumServerApkLocation = this.clientConfig.getProperty(ClientProperties.SERVER_APK_LOCATION);
-			}
-			logger.debug("Robotium Server APK location is set to:" + this.robotiumServerApkLocation);
 			
-			if (this.clientConfig.isPropertyExist(ClientProperties.TUNNEL_APK_LOCATION)) {
-				this.tunnelApkLocation = this.clientConfig.getProperty(ClientProperties.TUNNEL_APK_LOCATION);
+			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_APK_LOCATION)) {
+				this.serverApkLocation = this.clientConfig.getProperty(ClientProperties.SERVER_APK_LOCATION);
 			}
-			logger.debug("Tunnel APK location is set to:" + this.tunnelApkLocation);
-	
-			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST)) {
-				this.tunnelHost = this.clientConfig.getProperty(ClientProperties.SERVER_HOST);
-			}
-			logger.debug("Tunnel Host is set to" + this.tunnelHost);
+			logger.debug("Server APK location is set to:" + this.serverApkLocation);
 		}
 		else {
 			logger.debug("Using Default Values");
@@ -307,8 +284,7 @@ public class MobileClient implements MobileClientInterface {
 	}
 
 	private void setPortForwarding() throws Exception {
-		device.setPortForwarding(this.clientPort, this.tunnelPort);
-		device.setPortForwarding(this.tunnelPort, this.robotiumServerPort);
+		device.setPortForwarding(this.clientPort, this.serverPort);
 	}
 	
 	public void closeActivity() throws Exception {
