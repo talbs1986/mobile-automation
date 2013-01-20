@@ -1,13 +1,15 @@
 package org.topq.mobile.client.impl;
 
+import java.util.Map;
+
 import net.iharder.Base64;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.topq.mobile.client.interfaces.MobileClientInterface;
 import org.topq.mobile.common.client.enums.Attribute;
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.common.client.enums.HardwareButtons;
-import org.topq.mobile.common.client.interfaces.MobileClientInterface;
 import org.topq.mobile.common.server.consts.TcpConsts;
 import org.topq.mobile.core.AdbController;
 import org.topq.mobile.core.device.AbstractAndroidDevice;
@@ -19,12 +21,10 @@ import com.android.ddmlib.InstallException;
 public class MobileClient implements MobileClientInterface {
 
 	private static Logger logger = Logger.getLogger(MobileClient.class);
-	private static final String RESULT_STRING = "RESULT";
 	private static final String SERVER_PACKAGE_NAME = "org.topq.mobile.tunnel.application";
 	private static final String SERVER_CLASS_NAME = "TcpServerActivty";
 	private static final String DEFAULT_EMULATOR_SERIAL = "emulator-5554";
 
-	private ClientConfiguration clientConfig;
 	private TcpClient tcpClient;
 	private USBDevice device;
 	private String deviceSerial = DEFAULT_EMULATOR_SERIAL;
@@ -32,71 +32,65 @@ public class MobileClient implements MobileClientInterface {
 	private int serverPort = TcpConsts.SERVER_DEFAULT_PORT;
 	private int clientPort = TcpClient.DEFAULT_PORT;
 	private String serverHost = TcpConsts.SERVER_DEFAULT_HOSTNAME;
-	private String autApkLocation;
-	private String serverApkLocation;
 	
 	
-	public MobileClient() throws InstallException, Exception {
-		this(null,false,false);
-	}
-	
-	public MobileClient(boolean deployServer, boolean launchServer) throws InstallException, Exception {
-		this(null,deployServer,launchServer);
-	}
-	
-	/**
-	 * 
-	 * @param configFileName- the location of the client config file
-	 * @param deployServer - will install the serverApk (if you olrady install it the old version will be delete and the new one will be installed)
-	 * @param launchServer - start the server 
-	 * @throws Exception
-	 */
-	public MobileClient(ClientConfiguration clientConfig, boolean deployServer, boolean launchServer) throws InstallException, Exception {
-		this.clientConfig = clientConfig;
-		this.readConfig();
-		this.buildConfig();
-		this.device = AdbController.getInstance().waitForDeviceToConnect(this.deviceSerial);
-		if (deployServer)
-			this.deployServer();
-		if (launchServer)
-			this.launchServer();
-		this.setPortForwarding();
-		this.tcpClient = new TcpClient(this.serverHost, this.clientPort);
+	private MobileClient() {
+		this(DEFAULT_EMULATOR_SERIAL);
 	}
 
-	private void buildConfig() {
-		if (this.clientConfig != null) {
-			if (!this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST))
-				this.clientConfig.buildProperty(ClientProperties.SERVER_HOST, this.serverHost);
-			if (!this.clientConfig.isPropertyExist(ClientProperties.SERVER_PORT))
-				this.clientConfig.buildProperty(ClientProperties.SERVER_PORT, String.valueOf(this.serverPort));
+	private MobileClient(String deviceSerial) {
+		try {
+			this.deviceSerial = deviceSerial;
+			this.device = AdbController.getInstance().waitForDeviceToConnect(this.deviceSerial);
+			this.setPortForwarding();
+			this.tcpClient = new TcpClient(this.serverHost, this.clientPort);
+		}
+		catch(Exception e) {
+			logger.error("Exception in constructor !!", e);
 		}
 	}
-
-	private void deployServer() throws InstallException {
-		if (this.autApkLocation != null && !this.autApkLocation.isEmpty()) {
+	
+	public static MobileClientInterface getInstance(){
+		return new MobileClient();
+	}
+	
+	public static MobileClientInterface getInstance(String deviceSerial){
+		return new MobileClient(deviceSerial);
+	}
+	
+	public void launchServer(ClientConfiguration serverProperties,String serverApkLocation) {
+		if (serverApkLocation != null && !serverApkLocation.isEmpty()) {
+			try {
+				this.readConfig(serverProperties);
+				this.deployAPK(serverApkLocation);
+				ClientConfiguration config = buildConfig();
+				this.launchApplication(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, config.toMap());
+			}
+			catch(Exception e) {
+				logger.error("Error while launching server application", e);
+			}
+		}
+	}
+	
+	public void deployAPK(String apkLocation) throws InstallException {
+		if (apkLocation != null && !apkLocation.isEmpty()) {
 			logger.info("About to deploy Application Under Test on device");
-			device.installPackage(this.autApkLocation, true);
-		}
-		else {
-			logger.error("Error , apk location is empty");
-		}
-		
-		if (this.serverApkLocation != null && !this.serverApkLocation.isEmpty()) {
-			logger.info("About to deploy Server on device");
-			device.installPackage(this.serverApkLocation, true);
+			this.device.installPackage(apkLocation, true);
 		}
 		else {
 			logger.error("Error , apk location is empty");
 		}
 	}
 	
-	private void launchServer() throws Exception {
-		logger.info("About to launch server on device");
-		if (this.clientConfig != null)
-			device.executePackageWithArguments(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, this.clientConfig.toMap());
-		else
-			device.executePackageWithArguments(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, null);
+	private ClientConfiguration buildConfig() {
+		ClientConfiguration result = new ClientConfiguration();
+		result.buildProperty(ClientProperties.SERVER_PORT, String.valueOf(this.serverPort));
+		return result;
+	}
+	
+	public void launchApplication(String packageName,String mainActivityName,Map<String,String> arguments) throws Exception {
+		logger.info("About to launch application on device");
+		this.device.executePackageWithArguments(packageName, mainActivityName, arguments);
 	}
 
 	
@@ -105,32 +99,27 @@ public class MobileClient implements MobileClientInterface {
 	 * 
 	 * @param configProperties
 	 */
-	private void readConfig() {
-		if (this.clientConfig != null && !this.clientConfig.isEmpty()) {
-			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_HOST)) {
-				this.serverHost = this.clientConfig.getProperty(ClientProperties.SERVER_HOST);
+	private void readConfig(ClientConfiguration clientConfig) {
+		if (clientConfig != null && !clientConfig.isEmpty()) {
+			if (clientConfig.isPropertyExist(ClientProperties.SERVER_HOST)) {
+				this.serverHost = clientConfig.getProperty(ClientProperties.SERVER_HOST);
 			}
 			logger.debug("Server Host is set to" + this.serverHost);
 			
-			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_PORT)) {
-				this.serverPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.SERVER_PORT));
+			if (clientConfig.isPropertyExist(ClientProperties.SERVER_PORT)) {
+				this.serverPort = Integer.parseInt(clientConfig.getProperty(ClientProperties.SERVER_PORT));
 			}
 			logger.debug("Server Port is set to" + this.serverPort);
 			
-			if (this.clientConfig.isPropertyExist(ClientProperties.CLIENT_PORT)) {
-				this.clientPort = Integer.parseInt(this.clientConfig.getProperty(ClientProperties.CLIENT_PORT));
+			if (clientConfig.isPropertyExist(ClientProperties.CLIENT_PORT)) {
+				this.clientPort = Integer.parseInt(clientConfig.getProperty(ClientProperties.CLIENT_PORT));
 			}
 			logger.debug("Client Port is set to" + this.clientPort);
 	
-			if (this.clientConfig.isPropertyExist(ClientProperties.DEVICE_SERIAL)) {
-				this.deviceSerial = this.clientConfig.getProperty(ClientProperties.DEVICE_SERIAL);
+			if (clientConfig.isPropertyExist(ClientProperties.DEVICE_SERIAL)) {
+				this.deviceSerial = clientConfig.getProperty(ClientProperties.DEVICE_SERIAL);
 			}
 			logger.debug("Device serial is set to" + this.deviceSerial);
-			
-			if (this.clientConfig.isPropertyExist(ClientProperties.SERVER_APK_LOCATION)) {
-				this.serverApkLocation = this.clientConfig.getProperty(ClientProperties.SERVER_APK_LOCATION);
-			}
-			logger.debug("Server APK location is set to:" + this.serverApkLocation);
 		}
 		else {
 			logger.debug("Using Default Values");
