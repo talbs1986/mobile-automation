@@ -10,12 +10,12 @@
    
     <uses-permission android:name="android.permission.RUN_INSTRUMENTATION" />    
     <uses-permission android:name="android.permission.INTERNET"/> 	 
-    <instrumentation android:targetPackage="com.tal.example.loginapp"
+    <instrumentation android:targetPackage="org.topq.mobile.example.loginapp"
        android:name="org.topq.mobile.server.impl.RobotiumExecutor"/> 	       
     
    <instrumentation
         android:name="android.test.InstrumentationTestRunner"
-        android:targetPackage="com.tal.example.loginapp"/>
+        android:targetPackage="org.topq.mobile.example.loginapp"/>
 
     <application
         android:icon="@drawable/ic_launcher"

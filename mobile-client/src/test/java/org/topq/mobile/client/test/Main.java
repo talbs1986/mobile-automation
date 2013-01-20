@@ -7,21 +7,21 @@ public class Main {
 	
 	public static void main(String [ ] args) {
 		try {
-			MobileClientInterface x = new MobileClient(null,false,true);
-			x.launch("com.tal.example.loginapp.LoginActivity");
-			x.enterText(0, "tal@tal.com");
-			x.enterText(1, "1234567");
-			x.clickOnButtonWithText("Sign in or register");
+			MobileClientInterface clientAPI = new MobileClient(null,false,true);
+			clientAPI.launch("org.topq.mobile.example.loginapp.LoginActivity");
+			clientAPI.enterText(0, "tal@tal.com");
+			clientAPI.enterText(1, "1234567");
+			clientAPI.clickOnButtonWithText("Sign in or register");
 			Thread.sleep(1000 * 5);
-			x.clickOnButtonWithText("Ok");
-			x.clickOnButtonWithText("Sign in or register");
+			clientAPI.clickOnButtonWithText("Ok");
+			clientAPI.clickOnButtonWithText("Sign in or register");
 			Thread.sleep(1000 * 5);
-			x.clickOnButtonWithText("Ok");
-		} catch (Exception e) {
+			clientAPI.clickOnButtonWithText("Ok");
+		} 
+		catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.exit(0);
-		
+		System.exit(0);		
 	}
 
 }
