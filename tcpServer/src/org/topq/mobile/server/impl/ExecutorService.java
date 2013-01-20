@@ -40,7 +40,7 @@ public class ExecutorService extends Service {
 	public IBinder onBind(Intent intent) {
 		if (ExecutorService.class.getName().equals(intent.getAction())) {
 		    Log.d(TAG, "Bound by intent " + intent);
-		    return apiEndPoint;
+		    return this.apiEndPoint;
 		} 
 		else {
 		    return null;

@@ -130,17 +130,20 @@ public class SoloExecutor {
 		try {
 			int viewId = arguments.getInt(0);
 			command += "(" + viewId + ")";
-			View view = solo.getView(viewId);
+			View view = this.solo.getView(viewId);
 			if (view != null) {
 				if (view.isShown()) {
 					result = SUCCESS_STRING + " view with ID: " + viewId + " is visible";
-				} else {
+				} 
+				else {
 					result = SUCCESS_STRING + " view with ID: " + viewId + " is not visible";
 				}
-			} else {
+			} 
+			else {
 				result = ERROR_STRING + " view with ID: " + viewId + " is not found ";
 			}
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
 			String error = ERROR_STRING + command + "failed due to " + e.getMessage();
 			Log.d(TAG, error);
 			return error;
@@ -157,10 +160,12 @@ public class SoloExecutor {
 			View view = findViewByName(viewName);
 			if (view.isShown()) {
 				result = SUCCESS_STRING + " view: " + viewName + " is visible";
-			} else {
+			} 
+			else {
 				result = SUCCESS_STRING + " view: " + viewName + " is not visible";
 			}
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
 			String error = ERROR_STRING + command + "failed due to " + e.getMessage();
 			Log.d(TAG, error);
 			return error;
@@ -180,17 +185,15 @@ public class SoloExecutor {
 			 * solo.getCurrentActivity().startActivityForResult(webIntent, 1); }else if
 			 * (arguments[0].equals("com.greenroad.PlayTrip")) {
 			 */
-			Log.d(TAG, "Sending intent to com.greenroad.PlayTrip");
+			Log.d(TAG, "Sending intent");
 			Intent broadcastIntent = new Intent();
 			broadcastIntent.setAction(arguments.getString(0));
 			for (int i = 1; i < arguments.length(); i = i + 2) {
-
 				broadcastIntent.putExtra(/*
 										 * solo.getCurrentActivity(). getCallingPackage()+
 										 */arguments.getString(i), arguments.getString(i + 1));
 			}
-			solo.getCurrentActivity().sendBroadcast(broadcastIntent);
-
+			this.solo.getCurrentActivity().sendBroadcast(broadcastIntent);
 			// }
 			/*
 			 * else if (arguments[0].equals("ACTION_SEND")) { Intent sendIntent = new Intent();
@@ -199,7 +202,8 @@ public class SoloExecutor {
 			 * "."+arguments[i],android.content.Intent.EXTRA_TEXT, arguments[i+1]); }
 			 * solo.getCurrentActivity().startActivity(sendIntent); }
 			 */
-		} catch (JSONException e) {
+		} 
+		catch (JSONException e) {
 			handleException(command, e);
 			return null;
 		}
@@ -226,7 +230,8 @@ public class SoloExecutor {
 			result.put("file", allText);
 			in.close();
 			fstream.close();
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			handleException(command, e);
 			return null;
 		}
@@ -243,14 +248,16 @@ public class SoloExecutor {
 				FileOutputStream fos = new FileOutputStream(arguments.getString(0));
 				fos.write(data);
 				fos.close();
-			} else {
+			} 
+			else {
 				command += "(" + arguments.getString(0) + ", " + arguments.getString(1) + ")";
 				FileWriter out = new FileWriter(arguments.getString(0));
 				out.write(arguments.getString(1));
 				out.close();
 			}
 			Log.d(TAG, "run the command:" + command);
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -260,14 +267,13 @@ public class SoloExecutor {
 		String command = "the command  getCurrentTextViews";
 		StringBuilder response = new StringBuilder();
 		try {
-
 			command += "(" + arguments.getString(0) + ")";
-
-			List<TextView> textViews = solo.getCurrentTextViews(null);
+			List<TextView> textViews = this.solo.getCurrentTextViews(null);
 			for (int i = 0; i < textViews.size(); i++) {
 				response.append(i).append(",").append(textViews.get(i).getText().toString()).append(";");
 			}
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command + ",Response: " + response.toString();
@@ -278,8 +284,9 @@ public class SoloExecutor {
 		String response = "";
 		try {
 			command += "(" + arguments.getInt(0) + ")";
-			response = solo.getCurrentTextViews(null).get(arguments.getInt(0)).getText().toString();
-		} catch (Throwable e) {
+			response = this.solo.getCurrentTextViews(null).get(arguments.getInt(0)).getText().toString();
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command + ",Response: " + response;
@@ -290,13 +297,14 @@ public class SoloExecutor {
 		StringBuilder response = new StringBuilder();
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			List<TextView> textViews = solo.getCurrentTextViews(null);
+			List<TextView> textViews = this.solo.getCurrentTextViews(null);
 			for (int i = 0; i < textViews.size(); i++) {
 				if (arguments.getString(0).trim().equals(textViews.get(i).getText().toString())) {
 					response.append(i).append(";");
 				}
 			}
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command + ",Response: " + response.toString();
@@ -307,8 +315,9 @@ public class SoloExecutor {
 		String response = "";
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			response = solo.getText(arguments.getInt(0)).getText().toString();
-		} catch (Throwable e) {
+			response = this.solo.getText(arguments.getInt(0)).getText().toString();
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command + ",Response: " + response;
@@ -318,8 +327,9 @@ public class SoloExecutor {
 		String command = "the command  clickOnMenuItem";
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			solo.clickOnMenuItem(arguments.getString(0));
-		} catch (Throwable e) {
+			this.solo.clickOnMenuItem(arguments.getString(0));
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -329,8 +339,9 @@ public class SoloExecutor {
 		String command = "the command  sendKey";
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			solo.sendKey(arguments.getInt(0));
-		} catch (Throwable e) {
+			this.solo.sendKey(arguments.getInt(0));
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -343,18 +354,21 @@ public class SoloExecutor {
 			int indexToClickOn = commandParameters.getInt(1);
 			command += "(controlId: " + controlId + ")";
 			command += "(indexToClickOn: " + indexToClickOn + ")";
-			View control = solo.getView(controlId);
+			View control = this.solo.getView(controlId);
 			if (control != null) {
 				if (indexToClickOn < control.getTouchables().size()) {
 					clickOnView(control.getTouchables().get(indexToClickOn));
-				} else {
+				} 
+				else {
 					return ERROR_STRING + command + "failed due to: index to click in control is out of bounds. control touchables: "
 							+ control.getTouchables().size();
 				}
-			} else {
+			} 
+			else {
 				return ERROR_STRING + command + "failed due to failed to find control with id: " + controlId;
 			}
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -369,7 +383,7 @@ public class SoloExecutor {
 	 *             in case view was not found<br>
 	 */
 	private View findViewByName(String viewName) throws Exception {
-		ArrayList<View> currentViews = solo.getCurrentViews();
+		ArrayList<View> currentViews = this.solo.getCurrentViews();
 		for (View view : currentViews) {
 			if (view.getClass().getName().contains(viewName)) {
 				return view;
@@ -393,9 +407,10 @@ public class SoloExecutor {
 		String command = "the command  clickOnView";
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			View view = solo.getView(arguments.getInt(0));
+			View view = this.solo.getView(arguments.getInt(0));
 			clickOnView(view);
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -405,8 +420,9 @@ public class SoloExecutor {
 		String command = "the command  clickOnButton";
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			solo.clickOnButton(arguments.getString(0));
-		} catch (Throwable e) {
+			this.solo.clickOnButton(arguments.getString(0));
+		}
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -416,8 +432,9 @@ public class SoloExecutor {
 		String command = "the command  clearEditText";
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			solo.clearEditText(arguments.getInt(0));
-		} catch (Throwable e) {
+			this.solo.clearEditText(arguments.getInt(0));
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -434,34 +451,37 @@ public class SoloExecutor {
 				String searchButtonByTextValue = arguments.getString(1);
 				command += "(Value: " + searchButtonByTextValue + ")";
 				isVisible = isButtonVisibleByText(searchButtonByTextValue);
-			} else if (searchButtonByKey.equalsIgnoreCase("id")) {
+			} 
+			else if (searchButtonByKey.equalsIgnoreCase("id")) {
 				int searchButtonByIntValue = arguments.getInt(1);
 				command += "(Value: " + searchButtonByIntValue + ")";
 				isVisible = isButtonVisibleById(searchButtonByIntValue);
 			}
-		} catch (Throwable e) {
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		if (isVisible) {
 			result = SUCCESS_STRING + command + " is visible";
-		} else {
+		} 
+		else {
 			result = SUCCESS_STRING + command + " is not visible";
 		}
-
 		return result;
 	}
 
 	private boolean isButtonVisibleByText(String buttonText) throws Exception {
-		Button button = solo.getButton(buttonText);
+		Button button = this.solo.getButton(buttonText);
 		if (button != null) {
 			return button.isShown();
-		} else {
+		} 
+		else {
 			throw new Exception("Button with text: " + buttonText + " was not found");
 		}
 	}
 
 	private boolean isButtonVisibleById(int buttonId) throws Exception {
-		ArrayList<Button> currentButtons = solo.getCurrentButtons();
+		ArrayList<Button> currentButtons = this.solo.getCurrentButtons();
 		for (Button button : currentButtons) {
 			if (button.getId() == buttonId){
 				if (button.isShown()){
@@ -476,20 +496,21 @@ public class SoloExecutor {
 		String command = "the command  clickInList(";
 		try {
 			command += "(" + arguments.getString(0) + ")";
-			solo.clickInList(arguments.getInt(0));
-		} catch (Throwable e) {
+			this.solo.clickInList(arguments.getInt(0));
+		}
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
-
 	}
 
 	private String clickOnButton(JSONArray params) {
 		String command = "the command  clickOnButton";
 		try {
 			command += "(" + params.getString(0) + ")";
-			solo.clickOnButton(params.getInt(0));
-		} catch (Throwable e) {
+			this.solo.clickOnButton(params.getInt(0));
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -499,8 +520,9 @@ public class SoloExecutor {
 		String command = "the command  enterText";
 		try {
 			command += "(" + params.getString(0) + ","+params.getString(1)+")";
-			solo.enterText(params.getInt(0), params.getString(1));
-		} catch (Throwable e) {
+			this.solo.enterText(params.getInt(0), params.getString(1));
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -511,9 +533,9 @@ public class SoloExecutor {
 		String command = "the command clickOnText";
 		try {
 			command += "(" + params.getString(0) + ")";
-			solo.clickOnText(params.getString(0));
-
-		} catch (Throwable e) {
+			this.solo.clickOnText(params.getString(0));
+		}
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -525,8 +547,9 @@ public class SoloExecutor {
 		try {
 			command += "(" + keyString.getString(0) + ")";
 			int key = (keyString.getString(0) == "HOME") ? KeyEvent.KEYCODE_HOME : KeyEvent.KEYCODE_BACK;
-			instrumentation.sendKeyDownUpSync(key);
-		} catch (Throwable e) {
+			this.instrumentation.sendKeyDownUpSync(key);
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + "click on hardware";
@@ -536,8 +559,9 @@ public class SoloExecutor {
 		Log.i(TAG, "Robotium: About to launch application");
 		String command = "the command  launch";
 		try {
-			solo = soloProvider.getSolo();
-		} catch (Throwable e) {
+			this.solo = this.soloProvider.getSolo();
+		} 
+		catch (Throwable e) {
 			return handleException(command, e);
 		}
 		return SUCCESS_STRING + command;
@@ -545,7 +569,7 @@ public class SoloExecutor {
 
 	private String closeActivity() {
 		Log.i(TAG, "Robotium: About to close application");
-		ArrayList<Activity> activities = solo.getAllOpenedActivities();
+		ArrayList<Activity> activities = this.solo.getAllOpenedActivities();
 		for (Activity activity : activities) {
 			activity.finish();
 		}
@@ -561,8 +585,9 @@ public class SoloExecutor {
 
 	private void clickOnView(View view) throws Exception {
 		if (view.isShown()) {
-			solo.clickOnView(view);
-		} else {
+			this.solo.clickOnView(view);
+		} 
+		else {
 			throw new Exception("clickOnView FAILED view: " + view.getClass().getSimpleName() + " is not shown");
 		}
 	}

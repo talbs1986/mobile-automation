@@ -23,7 +23,7 @@ import android.view.Menu;
 public class TcpServerActivity extends Activity implements IIntsrumentationLauncher,IDataCallback {
 	private static final String TAG = "TcpServerActivity";
 	private int serverPort;
-	private static boolean firstLaunch = true;
+	private boolean firstLaunch = true;
 	private IExecutorService serviceApi;
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		  @Override
@@ -42,8 +42,8 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (firstLaunch) {
-        	firstLaunch = false;
+        if (this.firstLaunch) {
+        	this.firstLaunch = false;
 	    	readConfiguration();
 	    	
 	    	TcpServer server = TcpServer.getInstance(this.serverPort);
@@ -53,7 +53,7 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 	    	
 	    	Intent service = new Intent(ExecutorService.class.getName());
 	    	startService(service);
-	    	bindService(service,serviceConnection , 0);
+	    	bindService(service,this.serviceConnection , 0);
         }
     }
 
@@ -100,7 +100,7 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 
 	@Override
 	public IBinder asBinder() {
-		// TODO Auto-generated method stub
+		// NOT USED
 		return null;
 	}
 }

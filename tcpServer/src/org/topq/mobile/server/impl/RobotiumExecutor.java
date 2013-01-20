@@ -82,7 +82,7 @@ public class RobotiumExecutor extends Instrumentation implements ISoloProvider {
 		Log.d(TAG, "This Context : "+getContext());
 		Log.d(TAG, "Target Package : "+getTargetContext().getPackageName());
     	Intent service = new Intent(ExecutorService.class.getName());	
-    	getContext().bindService(service,serviceConnection , 0);
+    	getContext().bindService(service,this.serviceConnection , 0);
     
 		start();
 	}
@@ -98,7 +98,7 @@ public class RobotiumExecutor extends Instrumentation implements ISoloProvider {
 		
 	@Override	
 	public Solo getSolo() {	
-		if(myActive == null) {
+		if(this.myActive == null) {
 			Log.i(TAG, "Starting AUT main activity");
 			Intent intent = new Intent(Intent.ACTION_MAIN);		
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -106,17 +106,17 @@ public class RobotiumExecutor extends Instrumentation implements ISoloProvider {
 			this.myActive = startActivitySync(intent);
 			Log.i(TAG, "App is started");
 		}
-		if(solo == null){
+		if(this.solo == null){
 			prepareLooper();
-			solo = new Solo(this,myActive);	
+			this.solo = new Solo(this,this.myActive);	
 		}
-		return solo;
+		return this.solo;
 	}
 		
 	public SoloExecutor getExecutor(){	
-		if(executor == null) {			
-			executor = new SoloExecutor(this, this);
+		if(this.executor == null) {			
+			this.executor = new SoloExecutor(this, this);
 		}		
-		return executor;	
+		return this.executor;	
 	}
 }
