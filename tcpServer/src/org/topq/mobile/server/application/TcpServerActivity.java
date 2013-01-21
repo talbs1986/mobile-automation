@@ -1,11 +1,9 @@
 package org.topq.mobile.server.application;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
+
 import java.net.NetworkInterface;
-import java.net.UnknownHostException;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 
 import org.topq.mobile.common.client.enums.ClientProperties;
@@ -18,9 +16,6 @@ import org.topq.mobile.server.impl.ExecutorService;
 import org.topq.mobile.server.impl.TcpServer;
 import org.topq.mobile.server.interfaces.IIntsrumentationLauncher;
 
-import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
