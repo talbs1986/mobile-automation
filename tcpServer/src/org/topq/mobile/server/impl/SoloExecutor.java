@@ -49,73 +49,74 @@ public class SoloExecutor {
 		JSONObject result = new JSONObject();
 		parser = new ScriptParser(data);
 		for (CommandParser command : parser.getCommands()) {
-			if (command.getCommand().equals("enterText")) {
+			String commandStr = command.getCommand();
+			if (commandStr.equals("enterText")) {
 				result.put(RESULT_STRING, enterText(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("isButtonVisible")) {
+			else if (commandStr.equals("isButtonVisible")) {
 				result.put(RESULT_STRING, isButtonVisible(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clickInControlByIndex")) {
+			else if (commandStr.equals("clickInControlByIndex")) {
 				result.put(RESULT_STRING, clickInControlByIndex(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("isViewVisibleByViewName")) {
+			else if (commandStr.equals("isViewVisibleByViewName")) {
 				result.put(RESULT_STRING, isViewVisibleByViewName(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("isViewVisibleByViewId")) {
+			else if (commandStr.equals("isViewVisibleByViewId")) {
 				result.put(RESULT_STRING, isViewVisibleByViewId(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clickOnButton")) {
+			else if (commandStr.equals("clickOnButton")) {
 				result.put(RESULT_STRING, clickOnButton(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("launch")) {
+			else if (commandStr.equals("launch")) {
 				result.put(RESULT_STRING, launch());
 			} 
-			else if (command.getCommand().equals("clickInList")) {
+			else if (commandStr.equals("clickInList")) {
 				result.put(RESULT_STRING, clickInList(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clearEditText")) {
+			else if (commandStr.equals("clearEditText")) {
 				result.put(RESULT_STRING, clearEditText(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clickOnButtonWithText")) {
+			else if (commandStr.equals("clickOnButtonWithText")) {
 				result.put(RESULT_STRING, clickOnButtonWithText(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clickOnView")) {
+			else if (commandStr.equals("clickOnView")) {
 				result.put(RESULT_STRING, clickOnView(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clickOnText")) {
+			else if (commandStr.equals("clickOnText")) {
 				result.put(RESULT_STRING, clickOnText(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("sendKey")) {
+			else if (commandStr.equals("sendKey")) {
 				result.put(RESULT_STRING, sendKey(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clickOnMenuItem")) {
+			else if (commandStr.equals("clickOnMenuItem")) {
 				result.put(RESULT_STRING, clickOnMenuItem(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("getText")) {
+			else if (commandStr.equals("getText")) {
 				result.put(RESULT_STRING, getText(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("getTextViewIndex")) {
+			else if (commandStr.equals("getTextViewIndex")) {
 				result.put(RESULT_STRING, getTextViewIndex(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("getTextView")) {
+			else if (commandStr.equals("getTextView")) {
 				result.put(RESULT_STRING, getTextView(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("getCurrentTextViews")) {
+			else if (commandStr.equals("getCurrentTextViews")) {
 				result.put(RESULT_STRING, getCurrentTextViews(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("clickOnHardware")) {
+			else if (commandStr.equals("clickOnHardware")) {
 				result.put(RESULT_STRING, clickOnHardware(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("createFileInServer")) {
+			else if (commandStr.equals("createFileInServer")) {
 				result.put(RESULT_STRING, createFileInServer(command.getArguments()));
 			} 
-			else if (command.getCommand().equals("pull")) {
+			else if (commandStr.equals("pull")) {
 				return pull(command.getArguments());
 			} 
-			else if (command.getCommand().equals("closeActivity")) {
+			else if (commandStr.equals("closeActivity")) {
 				result.put(RESULT_STRING, closeActivity());
 			} 
-			else if (command.getCommand().equals("activateIntent")) {
+			else if (commandStr.equals("activateIntent")) {
 				result.put(RESULT_STRING, activateIntent(command.getArguments()));
 			}
 		}
