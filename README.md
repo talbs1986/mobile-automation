@@ -26,8 +26,8 @@ verify what is the AUT's package and main activity .
 - Import all the projects into eclipse , and compile all the maven projects.
 - Change the AndroidManifest.xml instrumentation element of the tcpServer project with this line :    
    &lt;instrumentation android:name="android.test.InstrumentationTestRunner" android:targetPackage="&lt;AUT_PACKAGE_NAME&gt;"/&gt;
-- Deploy the AUT and tcpServer apks by these two ways :
-  a) Manually deploy the apks using the eclipse. (right click on project -> run as -> android project)
-  b) Build both apks with the same signature and export to apk. use the mobile-client interface to deploy the apks.
+- Deploy the AUT and tcpServer apks by these two ways : <br>
+  a) Manually deploy the apks using the eclipse. (right click on project -> run as -> android project) <br>
+  b) Build both apks with the same signature and export to apk. use the mobile-client interface to deploy the apks. <br>
 
 
