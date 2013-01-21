@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.common.server.consts.TcpConsts;
@@ -20,16 +21,22 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
+import android.text.Editable;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class TcpServerActivity extends Activity implements IIntsrumentationLauncher,IDataCallback {
 	private static final String TAG = "TcpServerActivity";
+	private TcpServer serverThread;
 	private int serverPort;
 	private boolean firstLaunch = true;
 	private IExecutorService serviceApi;
@@ -48,10 +55,9 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 	
 	/**
      * Get IP address from first non-localhost interface
-     * @param ipv4  true=return ipv4, false=return ipv6
      * @return  address or empty string
      */
-    public static String getIPAddress() {
+    private String getIPAddress() {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface intf : interfaces) {
@@ -68,6 +74,15 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
         }
         return "";
     }
+    
+    private void setServerDetailsText() {
+    	TextView serverDetails = (TextView)findViewById(R.id.server_details);
+	    Resources res = getResources();
+	    String str = res.getString(R.string.server_details);
+		String text = String.format(str,getIPAddress(), this.serverPort);
+	    serverDetails.setText(text);
+	    serverDetails.refreshDrawableState();
+    }
 		 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,22 +92,57 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 	    	readConfiguration();
 	    	
 	    	setContentView(R.layout.activity_tcp_server);
-			TextView serverDetails = (TextView)findViewById(R.id.server_details);
-		    Resources res = getResources();
-		    String str = res.getString(R.string.server_details);
-			String text = String.format(str,getIPAddress(), this.serverPort);
-		    serverDetails.setText(text);
+	    	setServerDetailsText();
 
-	    	TcpServer server = TcpServer.getInstance(this.serverPort);
-	    	server.registerInstrumentationLauncher(this);
-	    	server.registerDataExecutor(this);
-	    	server.startServerCommunication();
+	    	serverThread = TcpServer.getInstance(this.serverPort);
+	    	serverThread.registerInstrumentationLauncher(this);
+	    	serverThread.registerDataExecutor(this);
+	    	serverThread.startServerCommunication();
 	    	
 	    	Intent service = new Intent(ExecutorService.class.getName());
 	    	startService(service);
 	    	bindService(service,this.serviceConnection , 0);
         }
     }
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+		boolean result = false;
+	    switch (item.getItemId()) {
+	        case R.id.menu_settings:
+	            setNewServerPort();
+	            result = true;
+	        default:
+	        	result = super.onOptionsItemSelected(item);            
+	    }
+	    return result;
+	}
+	
+	private void setNewServerPort() {
+		final EditText input = new EditText(this);
+		new AlertDialog.Builder(this)
+	    .setTitle("Server Port")
+	    .setMessage("Set new server port :")
+	    .setView(input)
+	    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int whichButton) {
+	            Editable value = input.getText();
+	            try {
+		            serverPort = Integer.parseInt(value.toString());
+		            setServerDetailsText();
+		            serverThread.setNewPort(serverPort);
+				} 
+	            catch (Exception e) {
+	            	Log.e(TAG, "Exception in parse port", e);
+	            }      
+	        }
+	    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int whichButton) {
+	            // Do nothing.
+	        }
+	    }).show();
+	}
 
 	@Override
 	public String dataReceived(String data) {

@@ -22,6 +22,8 @@ public class TcpServer implements Runnable {
 	private boolean serverLiving = true;
 	private IIntsrumentationLauncher instrumentationLauncher;
 	private IDataCallback dataExecutor;
+	private ServerSocket serverSocket;
+	private Socket clientSocket;
 	
 	private TcpServer(int listenerPort) {
 		this.listenerPort = listenerPort;
@@ -30,6 +32,18 @@ public class TcpServer implements Runnable {
 		TcpServer.TAG = "TcpServer("+this.listenerPort+")";
 	}
 
+	public void setNewPort(int newPort) {
+		this.listenerPort = newPort;
+		TcpServer.TAG = "TcpServer("+this.listenerPort+")";
+		Log.i(TAG,"Setting new port : "+this.listenerPort);
+		this.stopServerCommunication();
+		try {
+			Thread.sleep(1000);
+		}
+		catch (Exception e) {}
+		this.startServerCommunication();
+	}
+	
 	public static TcpServer getInstance(int listenerPort) {
 		return new TcpServer(listenerPort);
 	}
@@ -37,13 +51,14 @@ public class TcpServer implements Runnable {
 	public void startServerCommunication() {
 		Thread serverThread = new Thread(this);
 		Log.i(TAG,"About to launch server");
+		this.serverLiving = true;
 		serverThread.start();	
 		Log.i(TAG,"Server has start");
 	}
 	
 	public void stopServerCommunication() {
-		Log.d(TAG,"About to stop server");
-		this.serverLiving = false;
+		Log.i(TAG,"About to stop server");
+			this.serverLiving = false;
 	}
 	
 	public void registerInstrumentationLauncher(IIntsrumentationLauncher instruLauncher) {
@@ -57,19 +72,19 @@ public class TcpServer implements Runnable {
 	}
 	
 	public void run() {
-		ServerSocket serverSocket = null;
-		Socket clientSocket = null;
+		this.serverSocket = null;
+		this.clientSocket = null;
 		try {
 			serverSocket = new ServerSocket(this.listenerPort);
 			while (this.serverLiving) {
 				Log.i(TAG, "Server is waiting for connection ...");
-				clientSocket = serverSocket.accept();	
+				this.clientSocket = this.serverSocket.accept();	
 				PrintWriter clientOut = null;
 				BufferedReader clientIn = null;
 				try {
 					Log.i(TAG, "Connection established");
-					clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
-					clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+					clientOut = new PrintWriter(this.clientSocket.getOutputStream(), true);
+					clientIn = new BufferedReader(new InputStreamReader(this.clientSocket.getInputStream()));
 					String line = clientIn.readLine();	
 					if (line != null) {
 						Log.d(TAG, "Received: '" + line + "'");
@@ -99,8 +114,8 @@ public class TcpServer implements Runnable {
 						if (null != clientIn) {
 							clientIn.close();
 						}
-						if (null != clientSocket) {
-							clientSocket.close();
+						if (null != this.clientSocket) {
+							this.clientSocket.close();
 						}
 					} 
 					catch (Exception e) {
