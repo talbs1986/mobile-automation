@@ -24,7 +24,7 @@ verify what is the AUT's package and main activity .
 <b><h3>How To Work with the Framework :</h3></b>
 - Download the entire mobile automation repository
 - Import all the projects into eclipse , and compile all the maven projects.
-- Change the AndroidManifest.xml instrumentation element of the tcpServer project with this line :    
+- Change the AndroidManifest.xml instrumentation element of the tcpServer project with this line :  
    &lt;instrumentation android:targetPackage="&lt;AUT_PACKAGE_NAME&gt;" android:name="org.topq.mobile.server.impl.RobotiumExecutor"/&gt; 
 - Deploy the AUT and tcpServer apks by these two ways : <br>
   a) Manually deploy the apks using the eclipse. (right click on project -> run as -> android project) <br>
