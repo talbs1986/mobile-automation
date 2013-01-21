@@ -1,5 +1,13 @@
 package org.topq.mobile.server.application;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.common.server.consts.TcpConsts;
 import org.topq.mobile.server.interfaces.IExecutorService;
@@ -10,6 +18,9 @@ import org.topq.mobile.server.impl.ExecutorService;
 import org.topq.mobile.server.impl.TcpServer;
 import org.topq.mobile.server.interfaces.IIntsrumentationLauncher;
 
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -17,8 +28,10 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.util.Log;
 import android.view.Menu;
+import android.widget.TextView;
 
 public class TcpServerActivity extends Activity implements IIntsrumentationLauncher,IDataCallback {
 	private static final String TAG = "TcpServerActivity";
@@ -37,8 +50,30 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 		    Log.i(TAG, "Service connection closed");      
 		  }
 	};
+	
+	/**
+     * Get IP address from first non-localhost interface
+     * @param ipv4  true=return ipv4, false=return ipv6
+     * @return  address or empty string
+     */
+    public static String getIPAddress() {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface intf : interfaces) {
+                List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
+                for (InetAddress addr : addrs) {
+                    if (!addr.isLoopbackAddress()) {
+                        return addr.getHostAddress();
+                    }
+                }
+            }
+        } 
+        catch (Exception e) {
+        	Log.e(TAG, "Execption while getting ip", e);
+        }
+        return "";
+    }
 		 
-			
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +81,13 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
         	this.firstLaunch = false;
 	    	readConfiguration();
 	    	
+	    	setContentView(R.layout.activity_tcp_server);
+			TextView serverDetails = (TextView)findViewById(R.id.server_details);
+		    Resources res = getResources();
+		    String str = res.getString(R.string.server_details);
+			String text = String.format(str,getIPAddress(), this.serverPort);
+		    serverDetails.setText(text);
+
 	    	TcpServer server = TcpServer.getInstance(this.serverPort);
 	    	server.registerInstrumentationLauncher(this);
 	    	server.registerDataExecutor(this);
@@ -62,7 +104,7 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 		String result = null;
 		try {
 			Log.d(TAG, "Executing command : "+data);
-			result = serviceApi.executeCommand(data);
+			result = this.serviceApi.executeCommand(data);
 		}
 		catch (RemoteException e) {
 			Log.e(TAG,"Error in service API",e);
