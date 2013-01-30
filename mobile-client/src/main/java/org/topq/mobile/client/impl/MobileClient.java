@@ -21,8 +21,8 @@ import com.android.ddmlib.InstallException;
 public class MobileClient implements MobileClientInterface {
 
 	private static Logger logger = Logger.getLogger(MobileClient.class);
-	private static final String SERVER_PACKAGE_NAME = "org.topq.mobile.tunnel.application";
-	private static final String SERVER_CLASS_NAME = "TcpServerActivty";
+	private static final String SERVER_PACKAGE_NAME = "org.topq.mobile.server.application";
+	private static final String SERVER_CLASS_NAME = "TcpServerActivity";
 	private static final String DEFAULT_EMULATOR_SERIAL = "emulator-5554";
 
 	private TcpClient tcpClient;
