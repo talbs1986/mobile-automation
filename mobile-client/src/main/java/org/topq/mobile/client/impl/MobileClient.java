@@ -1,49 +1,28 @@
 package org.topq.mobile.client.impl;
 
-import java.util.Map;
-
 import net.iharder.Base64;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.topq.mobile.client.interfaces.MobileClientInterface;
 import org.topq.mobile.common.client.enums.Attribute;
-import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.common.client.enums.HardwareButtons;
 import org.topq.mobile.common.server.consts.TcpConsts;
-import org.topq.mobile.core.AdbController;
-import org.topq.mobile.core.device.AbstractAndroidDevice;
-import org.topq.mobile.core.device.USBDevice;
 import org.topq.mobile.tcp.impl.TcpClient;
-
-import com.android.ddmlib.InstallException;
 
 public class MobileClient implements MobileClientInterface {
 
 	private static Logger logger = Logger.getLogger(MobileClient.class);
-	private static final String SERVER_PACKAGE_NAME = "org.topq.mobile.server.application";
-	private static final String SERVER_CLASS_NAME = "TcpServerActivity";
-	private static final String DEFAULT_EMULATOR_SERIAL = "emulator-5554";
 
 	private TcpClient tcpClient;
-	private USBDevice device;
-	private String deviceSerial = DEFAULT_EMULATOR_SERIAL;
-	private static boolean getScreenshots = false;
-	private int serverPort = TcpConsts.SERVER_DEFAULT_PORT;
-	private int clientPort = TcpClient.DEFAULT_PORT;
-	private String serverHost = TcpConsts.SERVER_DEFAULT_HOSTNAME;
+	private int serverPort;
+	private String serverHost;
 	
-	
-	private MobileClient() {
-		this(DEFAULT_EMULATOR_SERIAL);
-	}
-
-	private MobileClient(String deviceSerial) {
+	private MobileClient(String serverHost,int serverPort) {
 		try {
-			this.deviceSerial = deviceSerial;
-			this.device = AdbController.getInstance().waitForDeviceToConnect(this.deviceSerial);
-			this.setPortForwarding();
-			this.tcpClient = new TcpClient(this.serverHost, this.clientPort);
+			this.serverPort = serverPort;
+			this.serverHost = serverHost;
+			this.tcpClient = new TcpClient(this.serverHost, this.serverPort);
 		}
 		catch(Exception e) {
 			logger.error("Exception in constructor !!", e);
@@ -51,80 +30,12 @@ public class MobileClient implements MobileClientInterface {
 	}
 	
 	public static MobileClientInterface getInstance(){
-		return new MobileClient();
+		return new MobileClient(TcpConsts.SERVER_DEFAULT_HOSTNAME,TcpConsts.SERVER_DEFAULT_PORT);
 	}
 	
-	public static MobileClientInterface getInstance(String deviceSerial){
-		return new MobileClient(deviceSerial);
+	public static MobileClientInterface getInstance(String serverHost,int serverPort){
+		return new MobileClient(serverHost,serverPort);
 	}
-	
-	public void launchServer(ClientConfiguration serverProperties,String serverApkLocation) {
-		if (serverApkLocation != null && !serverApkLocation.isEmpty()) {
-			try {
-				this.readConfig(serverProperties);
-				this.deployAPK(serverApkLocation);
-				ClientConfiguration config = buildConfig();
-				this.launchApplication(SERVER_PACKAGE_NAME, SERVER_CLASS_NAME, config.toMap());
-			}
-			catch(Exception e) {
-				logger.error("Error while launching server application", e);
-			}
-		}
-	}
-	
-	public void deployAPK(String apkLocation) throws InstallException {
-		if (apkLocation != null && !apkLocation.isEmpty()) {
-			logger.info("About to deploy Application Under Test on device");
-			this.device.installPackage(apkLocation, true);
-		}
-		else {
-			logger.error("Error , apk location is empty");
-		}
-	}
-	
-	private ClientConfiguration buildConfig() {
-		ClientConfiguration result = new ClientConfiguration();
-		result.buildProperty(ClientProperties.SERVER_PORT, String.valueOf(this.serverPort));
-		return result;
-	}
-	
-	public void launchApplication(String packageName,String mainActivityName,Map<String,String> arguments) throws Exception {
-		logger.info("About to launch application on device");
-		this.device.executePackageWithArguments(packageName, mainActivityName, arguments);
-	}
-
-	
-	/**
-	 * Read all the details from the given properties and populate the object members.
-	 * 
-	 * @param configProperties
-	 */
-	private void readConfig(ClientConfiguration clientConfig) {
-		if (clientConfig != null && !clientConfig.isEmpty()) {
-			if (clientConfig.isPropertyExist(ClientProperties.SERVER_HOST)) {
-				this.serverHost = clientConfig.getProperty(ClientProperties.SERVER_HOST);
-			}
-			logger.debug("Server Host is set to" + this.serverHost);
-			
-			if (clientConfig.isPropertyExist(ClientProperties.SERVER_PORT)) {
-				this.serverPort = Integer.parseInt(clientConfig.getProperty(ClientProperties.SERVER_PORT));
-			}
-			logger.debug("Server Port is set to" + this.serverPort);
-			
-			if (clientConfig.isPropertyExist(ClientProperties.CLIENT_PORT)) {
-				this.clientPort = Integer.parseInt(clientConfig.getProperty(ClientProperties.CLIENT_PORT));
-			}
-			logger.debug("Client Port is set to" + this.clientPort);
-	
-			if (clientConfig.isPropertyExist(ClientProperties.DEVICE_SERIAL)) {
-				this.deviceSerial = clientConfig.getProperty(ClientProperties.DEVICE_SERIAL);
-			}
-			logger.debug("Device serial is set to" + this.deviceSerial);
-		}
-		else {
-			logger.debug("Using Default Values");
-		}
-	}	
 
 
 	/**
@@ -148,7 +59,6 @@ public class MobileClient implements MobileClientInterface {
 			resultValue = (String) result.get(RESULT_STRING);
 			if (resultValue.contains(ERROR_STRING)) {
 				logger.error(result);
-				device.getScreenshot(null);
 			} else if (resultValue.contains(SUCCESS_STRING)) {
 				logger.info(result);
 			}
@@ -156,9 +66,6 @@ public class MobileClient implements MobileClientInterface {
 		} catch (Exception e) {
 			logger.error("Failed to send / receive data", e);
 			throw e;
-		}
-		if (getScreenshots) {
-			device.getScreenshot(null);
 		}
 		return resultValue;
 	}
@@ -177,7 +84,7 @@ public class MobileClient implements MobileClientInterface {
 		jsonobj.put("Params", params);
 		logger.info("Sending command: " + jsonobj.toString());
 		JSONObject result = null;
-		logger.info("Send Data to " + device.getSerialNumber());
+		logger.info("Send Data to " + this.serverHost+':'+this.serverPort);
 
 		try {
 			String resultStr = null;
@@ -267,13 +174,6 @@ public class MobileClient implements MobileClientInterface {
 
 	public void closeConnection() throws Exception {
 		sendData("exit");
-	}
-	public AbstractAndroidDevice getDevice() throws Exception {
-		return device;
-	}
-
-	private void setPortForwarding() throws Exception {
-		device.setPortForwarding(this.clientPort, this.serverPort);
 	}
 	
 	public void closeActivity() throws Exception {

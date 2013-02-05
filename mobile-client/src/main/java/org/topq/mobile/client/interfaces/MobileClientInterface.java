@@ -1,8 +1,5 @@
 package org.topq.mobile.client.interfaces;
 
-import java.io.File;
-
-import org.topq.mobile.client.impl.ClientConfiguration;
 import org.topq.mobile.common.client.enums.HardwareButtons;
 
 /**
@@ -16,8 +13,6 @@ public interface MobileClientInterface {
 	public static final String ERROR_STRING = "ERROR";
 	public static final String SUCCESS_STRING = "SUCCESS";
 	public static final String NO_DATA_STRING = "NO_DATA_FROM_SERVER";
-
-	public void launchServer(ClientConfiguration serverProperties,String serverApkLocation);
 	
 	public String launch(String launcherActivityClass) throws Exception;
 	
