@@ -17,6 +17,9 @@
 *.class
 target
 
+#binaries
+/bin
+
 #JSystem files
 jsystem.properties
 jsystem.properties.bu

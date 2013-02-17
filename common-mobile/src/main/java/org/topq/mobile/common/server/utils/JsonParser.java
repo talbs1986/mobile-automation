@@ -34,7 +34,7 @@ public class JsonParser {
 			e.printStackTrace();
 		}	
 		return null;
-	 }
+	}
 
 }
 
