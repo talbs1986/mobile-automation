@@ -8,8 +8,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
-import org.topq.mobile.common.server.utils.CommandParser;
-import org.topq.mobile.common.server.utils.ScriptParser;
+import org.topq.mobile.common.datamodel.CommandRequest;
+import org.topq.mobile.common.server.utils.JsonParser;
 import org.topq.mobile.server.interfaces.IIntsrumentationLauncher;
 import org.topq.mobile.server.interfaces.IDataCallback;
 
@@ -88,14 +88,14 @@ public class TcpServer implements Runnable {
 					String line = clientIn.readLine();	
 					if (line != null) {
 						Log.d(TAG, "Received: '" + line + "'");
-						ScriptParser parser = new ScriptParser(line);
-						for (CommandParser command : parser.getCommands()) {
-							if(command.getCommand().equals("launch") && this.instrumentationLauncher != null){
+						CommandRequest request = JsonParser.fromJson(line,CommandRequest.class);
+//						for (CommandParser command : parser.getCommands()) {
+							if(request.getCommand().equals("launch") && this.instrumentationLauncher != null){
 								Log.d(TAG, "Recieved launch command");
-								this.instrumentationLauncher.startInstrrumentationServer(command.getArguments().getString(0));
+								this.instrumentationLauncher.startInstrrumentationServer(request.getParams()[0]);
 								Thread.sleep(TimeUnit.SECONDS.toMillis(5));
 							}
-						}
+//						}
 					}
 					Log.i(TAG, "Sending command to executor");
 					String response = dataExecutor.dataReceived(line);

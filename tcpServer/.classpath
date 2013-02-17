@@ -6,6 +6,6 @@
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry exported="true" kind="lib" path="libs/robotium-solo-3.4.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/common-mobile-0.0.1-SNAPSHOT.jar" sourcepath="/common-mobile"/>
+	<classpathentry exported="true" kind="lib" path="libs/common-mobile-0.0.1-SNAPSHOT-jar-with-dependencies.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

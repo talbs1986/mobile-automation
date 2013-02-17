@@ -19,8 +19,6 @@ import org.json.JSONObject;
  */
 public class TcpClient {
 	
-	public static final int DEFAULT_PORT = 8888;
-	
 	private static Logger logger = Logger.getLogger(TcpClient.class);
 	private String lastResult;
 	private final String host;
@@ -31,16 +29,16 @@ public class TcpClient {
 		this.port = port;
 	}
 
-	public String sendData(JSONObject data) {
+	public String sendData(String data) {
 		Socket socket = null;
 		BufferedReader input = null;
 		try {
-			socket = new Socket(host, port);
+			socket = new Socket(this.host, this.port);
 			input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter output = new PrintWriter(socket.getOutputStream());
 			output.println(data);
 			output.flush();
-			lastResult = input.readLine();
+			this.lastResult = input.readLine();
 		} catch (UnknownHostException e) {
 			logger.error("Uknown host ");
 			e.printStackTrace();
@@ -62,10 +60,10 @@ public class TcpClient {
 				logger.error("Failed closing resources due to ", e);
 			}
 		}
-		return lastResult;
+		return this.lastResult;
 	}
 
 	public String getData() throws IOException {
-		return lastResult;
+		return this.lastResult;
 	}
 }

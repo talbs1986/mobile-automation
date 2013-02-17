@@ -3,11 +3,13 @@ package org.topq.mobile.client.impl;
 import net.iharder.Base64;
 
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 import org.topq.mobile.client.interfaces.MobileClientInterface;
 import org.topq.mobile.common.client.enums.Attribute;
 import org.topq.mobile.common.client.enums.HardwareButtons;
+import org.topq.mobile.common.datamodel.CommandRequest;
+import org.topq.mobile.common.datamodel.CommandResponse;
 import org.topq.mobile.common.server.consts.TcpConsts;
+import org.topq.mobile.common.server.utils.JsonParser;
 import org.topq.mobile.tcp.impl.TcpClient;
 
 public class MobileClient implements MobileClientInterface {
@@ -50,19 +52,14 @@ public class MobileClient implements MobileClientInterface {
 	private String sendData(String command, String... params) throws Exception {
 		String resultValue;
 		try {
-			JSONObject result = sendDataAndGetJSonObj(command, params);
-
-			if (result.isNull(RESULT_STRING)) {
-				logger.error("No data recieved from the device");
-				return NO_DATA_STRING;
-			}
-			resultValue = (String) result.get(RESULT_STRING);
-			if (resultValue.contains(ERROR_STRING)) {
+			CommandResponse result = sendDataAndGetJSonObj(new CommandRequest(command,params));
+			resultValue = result.getResponse();
+			if (!result.isSucceeded()) {
 				logger.error(result);
-			} else if (resultValue.contains(SUCCESS_STRING)) {
+			} 
+			else {
 				logger.info(result);
 			}
-
 		} catch (Exception e) {
 			logger.error("Failed to send / receive data", e);
 			throw e;
@@ -78,20 +75,18 @@ public class MobileClient implements MobileClientInterface {
 	 * @return
 	 * @throws Exception
 	 */
-	private JSONObject sendDataAndGetJSonObj(String command, String... params) throws Exception {
-		JSONObject jsonobj = new JSONObject();
-		jsonobj.put("Command", command);
-		jsonobj.put("Params", params);
-		logger.info("Sending command: " + jsonobj.toString());
-		JSONObject result = null;
+	private CommandResponse sendDataAndGetJSonObj(CommandRequest request) throws Exception {
+		String jsonRequest = JsonParser.toJson(request);
+		logger.info("Sending command: " + jsonRequest);
+		CommandResponse result = null;
 		logger.info("Send Data to " + this.serverHost+':'+this.serverPort);
 
 		try {
 			String resultStr = null;
-			if ((resultStr = tcpClient.sendData(jsonobj)) == null) {
+			if ((resultStr = this.tcpClient.sendData(jsonRequest)) == null) {
 				throw new Exception("No data recvied from server! pleas check server log!");
 			}
-			result = new JSONObject(resultStr);
+			result = JsonParser.fromJson(resultStr, CommandResponse.class);
 		} 
 		catch (Exception e) {
 			logger.error("Failed to send / receive data", e);
@@ -109,8 +104,7 @@ public class MobileClient implements MobileClientInterface {
 	}
 
 	public String getTextViewIndex(String text) throws Exception {
-		String response = sendData("getTextViewIndex", text);
-		return response;
+		return sendData("getTextViewIndex", text);
 	}
 
 	public String getCurrentTextViews() throws Exception {
@@ -162,14 +156,13 @@ public class MobileClient implements MobileClientInterface {
 	}
 
 	public byte[] pull(String fileName) throws Exception {
-		JSONObject jsonObj = sendDataAndGetJSonObj("pull", fileName);
-		logger.info("command pull receved" + jsonObj);
-		return ((jsonObj.getString("file"))).getBytes("UTF-16LE");
+		CommandResponse response = sendDataAndGetJSonObj(new CommandRequest("pull", fileName));
+		logger.info("command pull receved" + JsonParser.toJson(response));
+		return ((response.getResponse())).getBytes("UTF-16LE");
 	}
 
 	public String push(byte[] data, String newlocalFileName) throws Exception {
-		String result = sendData("createFileInServer", newlocalFileName, Base64.encodeBytes(data, Base64.URL_SAFE), "true");
-		return result;
+		return sendData("createFileInServer", newlocalFileName, Base64.encodeBytes(data, Base64.URL_SAFE), "true");
 	}
 
 	public void closeConnection() throws Exception {
