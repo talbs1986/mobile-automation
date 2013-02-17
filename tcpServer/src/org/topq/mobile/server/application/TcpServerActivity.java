@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.conn.util.InetAddressUtils;
 import org.topq.mobile.common.client.enums.ClientProperties;
 import org.topq.mobile.common.server.consts.TcpConsts;
 import org.topq.mobile.server.interfaces.IExecutorService;
@@ -64,7 +65,10 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
                 List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
                 for (InetAddress addr : addrs) {
                     if (!addr.isLoopbackAddress()) {
-                        return addr.getHostAddress();
+                    	String sAddr = addr.getHostAddress().toUpperCase();
+						if (InetAddressUtils.isIPv4Address(sAddr)) {
+							return sAddr;
+						}
                     }
                 }
             }
@@ -72,7 +76,7 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
         catch (Exception e) {
         	Log.e(TAG, "Execption while getting ip", e);
         }
-        return "";
+        return "localhost";
     }
     
     private void setServerDetailsText() {
@@ -94,10 +98,10 @@ public class TcpServerActivity extends Activity implements IIntsrumentationLaunc
 	    	setContentView(R.layout.activity_tcp_server);
 	    	setServerDetailsText();
 
-	    	serverThread = TcpServer.getInstance(this.serverPort);
-	    	serverThread.registerInstrumentationLauncher(this);
-	    	serverThread.registerDataExecutor(this);
-	    	serverThread.startServerCommunication();
+	    	this.serverThread = TcpServer.getInstance(this.serverPort);
+	    	this.serverThread.registerInstrumentationLauncher(this);
+	    	this.serverThread.registerDataExecutor(this);
+	    	this.serverThread.startServerCommunication();
 	    	
 	    	Intent service = new Intent(ExecutorService.class.getName());
 	    	startService(service);
